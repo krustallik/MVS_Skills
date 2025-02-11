@@ -1,0 +1,39 @@
+﻿@model MVC.Models.UserInfo
+@{
+    ViewData["Title"] = Model.Name;
+}
+<div>
+    <h1 class="display-4">Hello @Model.Name</h1>
+    <h3>Email: @Model.Email</h3>
+    <div>ID: @Model.Id</div>
+    <div>Profession: @Model.Profession</div>
+
+    <h4>Навички</h4>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Назва</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Skills != null && Model.Skills.Any())
+            {
+                foreach (var skill in Model.Skills)
+                {
+                    <tr>
+                        <td style="background-color:@skill.Color; padding:5px 10px; color:white;">@skill.Title</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="2">Навички відсутні.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <!-- Посилання для керування навичками -->
+    <a asp-controller="Skill" asp-action="Index" asp-route-userId="@Model.Id" class="btn btn-info">Керувати навичками</a>
+    <a asp-controller="UserInfo" asp-action="Index" class="btn btn-outline-success">Return</a>
+</div>

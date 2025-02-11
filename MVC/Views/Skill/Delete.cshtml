@@ -1,0 +1,13 @@
+﻿@model MVC.Models.Skill
+@{
+    ViewData["Title"] = "Видалення навички";
+    var userId = (int)ViewBag.UserId;
+}
+<h1>Видалення навички для користувача з id = @userId </h1>
+<p>Ви впевнені, що хочете видалити навичку "<strong>@Model.Title</strong>"?</p>
+<form asp-action="Delete" method="post">
+    <input type="hidden" name="userId" value="@userId" />
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Видалити</button>
+    <a asp-action="Index" asp-route-userId="@userId" class="btn btn-secondary">Відміна</a>
+</form>

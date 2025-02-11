@@ -1,0 +1,59 @@
+﻿@model MVC.Models.Forms.UserInfoForm
+@{
+    ViewData["Title"] = "Edit " + Model.Name;
+    var i = 0;
+    var list = new SelectList(Model.Professions.Select(x => new { Id = i++, Title = x }).ToList(), "Id", "Title");
+}
+<div>
+    <h1 class="display-4">@ViewData["Title"]</h1>
+    <form method="post" asp-controller="UserInfo" asp-action="Edit" asp-route-id="@ViewData["id"]">
+        <div class="card">
+            <div class="card-body">
+                <div class="mb-3">
+                    @Html.LabelFor(x => x.Name, new { @class = "form-label" })
+                    @Html.TextBoxFor(x => x.Name, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(x => x.Name, null, new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(x => x.Email, new { @class = "form-label" })
+                    @Html.TextBoxFor(x => x.Email, new { @class = "form-control", type = "email" })
+                    @Html.ValidationMessageFor(x => x.Email, null, new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(x => x.ProfessionId, new { @class = "form-label" })
+                    @Html.DropDownListFor(x => x.ProfessionId, list, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(x => x.ProfessionId, null, new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(x => x.Description, new { @class = "form-label" })
+                    @Html.TextAreaFor(x => x.Description, new { @class = "form-control", rows = 5 })
+                    @Html.ValidationMessageFor(x => x.Description, null, new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(x => x.Birthday, new { @class = "form-label" })
+                    @Html.TextBoxFor(x => x.Birthday, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
+                    @Html.ValidationMessageFor(x => x.Birthday, null, new { @class = "text-danger" })
+                </div>
+                <div class="mb-3 form-check">
+                    @Html.LabelFor(x => x.IsActive, new { @class = "form-check-label" })
+                    @Html.CheckBoxFor(x => x.IsActive, new { @class = "form-check-input" })
+                    @Html.ValidationMessageFor(x => x.IsActive, null, new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(x => x.ExpirienseYears, new { @class = "form-label" })
+                    @Html.TextBoxFor(x => x.ExpirienseYears, new { @class = "form-control", type = "number", min = 0, max = 99, step = 1 })
+                    @Html.ValidationMessageFor(x => x.ExpirienseYears, null, new { @class = "text-danger" })
+                </div>
+                <div class="mb-3">
+                    @Html.LabelFor(x => x.Salary, new { @class = "form-label" })
+                    @Html.TextBoxFor(x => x.Salary, new { @class = "form-control", type = "number", min = 0, step = 0.01 })
+                    @Html.ValidationMessageFor(x => x.Salary, null, new { @class = "text-danger" })
+                </div>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </div>
+    </form>
+    <a asp-controller="UserInfo" asp-action="Index" class="btn btn-outline-success">Return</a>
+</div>

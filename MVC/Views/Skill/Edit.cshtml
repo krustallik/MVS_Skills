@@ -1,0 +1,29 @@
+﻿@model MVC.Models.Skill
+@{
+    ViewData["Title"] = "Редагування навички";
+    var userId = (int)ViewBag.UserId;
+}
+<h1>Редагування навички для користувача з id = @userId</h1>
+<form asp-action="Edit" method="post">
+    <input type="hidden" name="userId" value="@userId" />
+    <input type="hidden" asp-for="Id" />
+    <div class="form-group">
+        <label asp-for="Title"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Color"></label>
+        <select asp-for="Color" class="form-control" asp-items="new SelectList(ViewBag.ColorOptions)">
+            <option value="">Оберіть колір</option>
+        </select>
+        <span asp-validation-for="Color" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Зберегти</button>
+    <a asp-action="Index" asp-route-userId="@userId" class="btn btn-secondary mt-2">Відміна</a>
+</form>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

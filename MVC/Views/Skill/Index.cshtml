@@ -1,0 +1,33 @@
+﻿@model List<MVC.Models.Skill>
+@{
+    ViewData["Title"] = "Список навичок";
+    var userId = (int)ViewBag.UserId;
+}
+<h1>Список навичок для користувача з id = @userId</h1>
+<a asp-action="Create" asp-route-userId="@userId" class="btn btn-primary">Створити нову навичку</a>
+<table class="table table-bordered mt-3">
+    <thead>
+        <tr>
+            <th>Назва</th>
+            <th>Колір</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var skill in Model)
+        {
+            <tr>
+                <td>@skill.Title</td>
+                <td>
+                    <span style="background-color:@skill.Color; padding:5px 10px; color:white;">
+                        @skill.Color
+                    </span>
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@skill.Id" asp-route-userId="@userId" class="btn btn-warning btn-sm">Редагувати</a>
+                    <a asp-action="Delete" asp-route-id="@skill.Id" asp-route-userId="@userId" class="btn btn-danger btn-sm">Видалити</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
