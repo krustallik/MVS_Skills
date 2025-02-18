@@ -3,11 +3,14 @@
     ViewData["Title"] = "Список навичок";
     var userId = (int)ViewBag.UserId;
 }
+
 <h1>Список навичок для користувача з id = @userId</h1>
 <a asp-action="Create" asp-route-userId="@userId" class="btn btn-primary">Створити нову навичку</a>
+
 <table class="table table-bordered mt-3">
     <thead>
         <tr>
+            <th>Логотип</th>
             <th>Назва</th>
             <th>Колір</th>
             <th>Дії</th>
@@ -17,6 +20,16 @@
         @foreach (var skill in Model)
         {
             <tr>
+                <td>
+                    @if (!string.IsNullOrEmpty(skill.LogoPath))
+                    {
+                        <img src="@skill.LogoPath" alt="Логотип" width="80" height="80" class="img-thumbnail" />
+                    }
+                    else
+                    {
+                        <span class="text-muted">Немає логотипу</span>
+                    }
+                </td>
                 <td>@skill.Title</td>
                 <td>
                     <span style="background-color:@skill.Color; padding:5px 10px; color:white;">

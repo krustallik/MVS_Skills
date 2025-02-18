@@ -21,6 +21,16 @@
                 foreach (var skill in Model.Skills)
                 {
                     <tr>
+                        <td>
+                            @if (!string.IsNullOrEmpty(skill.LogoPath))
+                            {
+                                <img src="@skill.LogoPath" alt="Логотип" width="80" height="80" class="img-thumbnail" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">Немає логотипу</span>
+                            }
+                        </td>
                         <td style="background-color:@skill.Color; padding:5px 10px; color:white;">@skill.Title</td>
                     </tr>
                 }

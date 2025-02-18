@@ -3,8 +3,8 @@
     ViewData["Title"] = "Редагування навички";
     var userId = (int)ViewBag.UserId;
 }
-<h1>Редагування навички для користувача з id = @userId</h1>
-<form asp-action="Edit" method="post">
+<h1>Ediiting skills for user with id = @userId</h1>
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" name="userId" value="@userId" />
     <input type="hidden" asp-for="Id" />
     <div class="form-group">
@@ -14,13 +14,19 @@
     </div>
     <div class="form-group">
         <label asp-for="Color"></label>
-        <select asp-for="Color" class="form-control" asp-items="new SelectList(ViewBag.ColorOptions)">
-            <option value="">Оберіть колір</option>
+        <select asp-for="Color" class="form-control" asp-items="ViewBag.ColorOptions">
+            <option value="">Select color</option>
         </select>
         <span asp-validation-for="Color" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary mt-2">Зберегти</button>
-    <a asp-action="Index" asp-route-userId="@userId" class="btn btn-secondary mt-2">Відміна</a>
+
+    <div class="form-group">
+        <label for="file">Logo of skill</label>
+        <input type="file" name="file" class="form-control" accept="image/png, image/jpeg, image/jpg, image/gif" />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-2">Save</button>
+    <a asp-action="Index" asp-route-userId="@userId" class="btn btn-secondary mt-2">Cancel</a>
 </form>
 @section Scripts {
     @{

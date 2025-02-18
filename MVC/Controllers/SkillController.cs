@@ -46,17 +46,20 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Skill model, int userId)
+        public IActionResult Create(Skill model, int userId, IFormFile? file)
         {
             if (ModelState.IsValid)
             {
-                _service.Add(userId, model);
-                return RedirectToAction("Index", new { userId = userId });
+                _service.Add(userId, model, file);
+                return RedirectToAction("Index", new { userId });
             }
-            ViewBag.ColorOptions = _colorOptions;
+
             ViewBag.UserId = userId;
+            ViewBag.ColorOptions = _colorOptions;
             return View(model);
         }
+
+
 
         public IActionResult Edit(int id, int userId)
         {
@@ -71,13 +74,14 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(Skill model, int userId)
+        public IActionResult Edit(Skill model, int userId, IFormFile? file)
         {
             if (ModelState.IsValid)
             {
-                _service.Update(userId, model);
-                return RedirectToAction("Index", new { userId = userId });
+                _service.Update(userId, model, file);
+                return RedirectToAction("Index", new { userId });
             }
+
             ViewBag.UserId = userId;
             ViewBag.ColorOptions = _colorOptions;
             return View(model);
@@ -100,5 +104,6 @@ namespace MVC.Controllers
             _service.Delete(userId, id);
             return RedirectToAction("Index", new { userId = userId });
         }
+
     }
 }

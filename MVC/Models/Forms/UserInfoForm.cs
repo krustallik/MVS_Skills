@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using MVC.Models;
 
@@ -83,4 +84,7 @@ public class UserInfoForm
         }
         return ValidationResult.Success;
     }
+
+    [DisplayName("Avatar")]
+    public IFormFile? Image { get; set; }
 }

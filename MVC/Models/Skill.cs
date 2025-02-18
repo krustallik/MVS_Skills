@@ -13,5 +13,7 @@ namespace MVC.Models
         [Required(ErrorMessage = "Колір є обов’язковим")]
         [RegularExpression("^#([A-Fa-f0-9]{6})$", ErrorMessage = "Невірний формат кольору (очікується, наприклад, #FFFFFF)")]
         public string Color { get; set; } = "#FFFFFF";
+
+        public string? LogoPath { get; set; }
     }
 }

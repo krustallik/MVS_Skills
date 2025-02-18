@@ -49,16 +49,30 @@ namespace MVC.Models.Services
             return skills.FirstOrDefault(s => s.Id == id);
         }
 
-        public void Add(int userId, Skill skill)
+        /// <summary>
+        /// Додає нову навичку.
+        /// </summary>
+        public void Add(int userId, Skill skill, IFormFile? file)
         {
-            var skills = GetAll(userId);
-            // Призначаємо новий Id (послідовне зростання)
+                var skills = GetAll(userId);
+
+            // Призначаємо новий ID
             skill.Id = (skills.Any() ? skills.Max(s => s.Id) : 0) + 1;
+
+            // Обробка логотипу
+            if (file != null && file.Length > 0)
+            {
+                skill.LogoPath = SaveImage(file, userId, skill.Id);
+            }
+
             skills.Add(skill);
             SaveAll(userId, skills);
         }
 
-        public void Update(int userId, Skill skill)
+        /// <summary>
+        /// Оновлює навичку.
+        /// </summary>
+        public void Update(int userId, Skill skill, IFormFile? file)
         {
             var skills = GetAll(userId);
             var existing = skills.FirstOrDefault(s => s.Id == skill.Id);
@@ -66,18 +80,74 @@ namespace MVC.Models.Services
             {
                 existing.Title = skill.Title;
                 existing.Color = skill.Color;
+
+                // Якщо додається новий файл, замінюємо логотип
+                if (file != null && file.Length > 0)
+                {
+                    DeleteImage(existing.LogoPath); // Видаляємо старий файл
+                    existing.LogoPath = SaveImage(file, userId, skill.Id);
+                }
+
                 SaveAll(userId, skills);
             }
         }
 
+        /// <summary>
+        /// Видаляє навичку.
+        /// </summary>
         public void Delete(int userId, int id)
         {
             var skills = GetAll(userId);
             var toRemove = skills.FirstOrDefault(s => s.Id == id);
             if (toRemove != null)
             {
+                DeleteImage(toRemove.LogoPath);
                 skills.Remove(toRemove);
                 SaveAll(userId, skills);
+            }
+        }
+
+        /// <summary>
+        /// Зберігає зображення у wwwroot/images/skills.
+        /// </summary>
+        private string SaveImage(IFormFile file, int userId, int skillId)
+        {
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                throw new InvalidOperationException("Файл повинен бути зображенням (.jpg, .jpeg, .png, .gif)");
+            }
+
+            string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "skills");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            string uniqueFileName = $"user_{userId}_skill_{skillId}{fileExtension}";
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                file.CopyTo(fileStream);
+            }
+
+            return $"/images/skills/{uniqueFileName}";
+        }
+        /// <summary>
+        /// Видаляє зображення.
+        /// </summary>
+        private void DeleteImage(string? filePath)
+        {
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                string fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
+                if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                }
             }
         }
     }

@@ -94,6 +94,10 @@ namespace MVC.Controllers
                 return View(form);
             }
 
+            if (form.Image != null) { 
+                
+            }
+
             var model = _userService.FindById(id);
             form.Update(model);
             _userService.SaveChanges();
