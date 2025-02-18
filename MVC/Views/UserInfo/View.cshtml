@@ -2,48 +2,94 @@
 @{
     ViewData["Title"] = Model.Name;
 }
-<div>
-    <h1 class="display-4">Hello @Model.Name</h1>
-    <h3>Email: @Model.Email</h3>
-    <div>ID: @Model.Id</div>
-    <div>Profession: @Model.Profession</div>
+<div class="row">
+    <!-- Блок з аватаркою -->
+    <div class="col-md-3">
+        <h3>Аватар</h3>
+        @if (!string.IsNullOrEmpty(Model.AvatarPhoto))
+        {
+            <img src="@Model.AvatarPhoto" alt="Avatar" class="img-fluid img-thumbnail" />
+        }
+        else
+        {
+            <p>Аватар не задано</p>
+        }
+    </div>
 
-    <h4>Навички</h4>
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>Назва</th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (Model.Skills != null && Model.Skills.Any())
-            {
-                foreach (var skill in Model.Skills)
+    <!-- Інформація про користувача -->
+    <div class="col-md-9">
+        <h1 class="display-4">Hello @Model.Name</h1>
+        <h3>Email: @Model.Email</h3>
+        <div>ID: @Model.Id</div>
+        <div>Profession: @Model.Profession</div>
+        <p>@Model.Description</p>
+
+        <h4>Навички</h4>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Логотип</th>
+                    <th>Назва</th>
+                    <th>Колір</th>
+                    <th>Рівень</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Skills != null && Model.Skills.Any())
+                {
+                    foreach (var skill in Model.Skills)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(skill.LogoPath))
+                                {
+                                    <img src="@skill.LogoPath" alt="Логотип" width="80" height="80" class="img-thumbnail" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Немає логотипу</span>
+                                }
+                            </td>
+                            <td>@skill.Title</td>
+                            <td>
+                                <span style="background-color:@skill.Color; padding:5px 10px; color:white;">
+                                    @skill.Color
+                                </span>
+                            </td>
+                            <td>@skill.Level</td>
+                        </tr>
+                    }
+                }
+                else
                 {
                     <tr>
-                        <td>
-                            @if (!string.IsNullOrEmpty(skill.LogoPath))
-                            {
-                                <img src="@skill.LogoPath" alt="Логотип" width="80" height="80" class="img-thumbnail" />
-                            }
-                            else
-                            {
-                                <span class="text-muted">Немає логотипу</span>
-                            }
-                        </td>
-                        <td style="background-color:@skill.Color; padding:5px 10px; color:white;">@skill.Title</td>
+                        <td colspan="4">Навички відсутні.</td>
                     </tr>
                 }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="2">Навички відсутні.</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    <!-- Посилання для керування навичками -->
-    <a asp-controller="Skill" asp-action="Index" asp-route-userId="@Model.Id" class="btn btn-info">Керувати навичками</a>
-    <a asp-controller="UserInfo" asp-action="Index" class="btn btn-outline-success">Return</a>
+            </tbody>
+        </table>
+
+        <a asp-controller="Skill" asp-action="Index" asp-route-userId="@Model.Id" class="btn btn-info">Керувати навичками</a>
+        <a asp-controller="UserInfo" asp-action="Index" class="btn btn-outline-success">Return</a>
+    </div>
+</div>
+
+<hr />
+
+<!-- Галерея фото користувача -->
+<h3>Фото користувача</h3>
+<div class="d-flex flex-wrap">
+    @if (Model.PhotoPaths != null && Model.PhotoPaths.Any())
+    {
+        @foreach (var photo in Model.PhotoPaths)
+        {
+            <a asp-action="SetAvatar" asp-route-id="@Model.Id" asp-route-photo="@photo" title="Натисніть, щоб встановити як аватарку">
+                <img src="@photo" alt="User Photo" class="img-thumbnail m-1" style="width:100px; height:100px;" />
+            </a>
+        }
+    }
+    else
+    {
+        <p>Фото не завантажено.</p>
+    }
 </div>

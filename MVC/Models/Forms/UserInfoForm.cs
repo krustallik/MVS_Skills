@@ -76,6 +76,12 @@ public class UserInfoForm
         "Project Manager"
     ];
 
+    [DisplayName("Avatar")]
+    public IFormFile? Image { get; set; }
+
+    [Display(Name = "Фотографії")]
+    public List<IFormFile>? Photos { get; set; }
+
     public static ValidationResult? ValidateBirthday(DateTime birthday, ValidationContext context)
     {
         if (birthday > DateTime.Now)
@@ -85,6 +91,4 @@ public class UserInfoForm
         return ValidationResult.Success;
     }
 
-    [DisplayName("Avatar")]
-    public IFormFile? Image { get; set; }
 }

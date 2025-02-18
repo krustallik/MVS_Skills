@@ -6,7 +6,9 @@
 }
 <div>
     <h1 class="display-4">@ViewData["Title"]</h1>
-    <form method="post" enctype="multipart/form-data" asp-controller="UserInfo" asp-action="Edit" asp-route-id="@ViewData["id"]">
+    <form method="post" enctype="multipart/form-data" asp-controller="UserInfo" asp-action="EditPost">
+        <!-- Передаємо id через приховане поле -->
+        <input type="hidden" name="id" value="@ViewData["id"]" />
         <div class="card">
             <div class="card-body">
                 <div class="mb-3">
@@ -50,9 +52,9 @@
                     @Html.ValidationMessageFor(x => x.Salary, null, new { @class = "text-danger" })
                 </div>
                 <div class="mb-3">
-                    @Html.LabelFor(x => x.Image, new { @class = "form-label" })
-                    @Html.TextBoxFor(x => x.Image, new { @class = "form-control", type = "file", accept = ("*.jpg,*.jpeg,*.png") })
-                    @Html.ValidationMessageFor(x => x.Image, null, new { @class = "text-danger" })
+                    @Html.LabelFor(x => x.Photos, new { @class = "form-label" })
+                    <input type="file" name="Photos" class="form-control" multiple="multiple" accept="image/*" />
+                    @Html.ValidationMessageFor(x => x.Photos, null, new { @class = "text-danger" })
                 </div>
             </div>
             <div class="card-footer">
