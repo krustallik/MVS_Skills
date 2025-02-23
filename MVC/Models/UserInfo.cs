@@ -12,9 +12,10 @@
         public decimal Salary { get; set; }
         public string? Profession { get; set; }
 
-        public List<Skill>? Skills { get; set; } = new List<Skill>();
+        // Колекція навичок, які належать користувачу
+        public virtual ICollection<Skill> Skills { get; set; } = new List<Skill>();
 
-        // Нові властивості для фото користувача
+        // Залишаємо збереження фотографій на файловій системі, але шляхи можна зберігати в БД
         public List<string> PhotoPaths { get; set; } = new List<string>();
         public string? AvatarPhoto { get; set; }
     }

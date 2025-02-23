@@ -3,13 +3,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using MVC.Models;
 using MVC.Models.Services;
 
-
 namespace MVC.Controllers
 {
     public class SkillController : Controller
     {
         private readonly SkillService _service;
-
         // 10 варіантів кольорів для вибору
         private readonly List<SelectListItem> _colorOptions = new List<SelectListItem>
         {
@@ -25,15 +23,15 @@ namespace MVC.Controllers
             new SelectListItem { Value = "#FF3333", Text = "Red" }
         };
 
-        public SkillController(IWebHostEnvironment env)
+        public SkillController(SkillService service)
         {
-            _service = new SkillService(env);
+            _service = service;
         }
 
         // Перегляд списку навичок для конкретного користувача (userId передається як параметр)
-        public IActionResult Index(int userId)
+        public async Task<IActionResult> Index(int userId)
         {
-            var skills = _service.GetAll(userId);
+            var skills = await _service.GetAllAsync(userId);
             ViewBag.UserId = userId;
             return View(skills);
         }
@@ -46,11 +44,11 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Skill model, int userId, IFormFile? file)
+        public async Task<IActionResult> Create(Skill model, int userId, IFormFile? file)
         {
             if (ModelState.IsValid)
             {
-                _service.Add(userId, model, file);
+                await _service.AddAsync(userId, model, file);
                 return RedirectToAction("Index", new { userId });
             }
 
@@ -59,11 +57,9 @@ namespace MVC.Controllers
             return View(model);
         }
 
-
-
-        public IActionResult Edit(int id, int userId)
+        public async Task<IActionResult> Edit(int id, int userId)
         {
-            var skill = _service.GetById(userId, id);
+            var skill = await _service.GetByIdAsync(userId, id);
             if (skill == null)
             {
                 return NotFound();
@@ -74,11 +70,11 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(Skill model, int userId, IFormFile? file)
+        public async Task<IActionResult> Edit(Skill model, int userId, IFormFile? file)
         {
             if (ModelState.IsValid)
             {
-                _service.Update(userId, model, file);
+                await _service.UpdateAsync(userId, model, file);
                 return RedirectToAction("Index", new { userId });
             }
 
@@ -87,9 +83,9 @@ namespace MVC.Controllers
             return View(model);
         }
 
-        public IActionResult Delete(int id, int userId)
+        public async Task<IActionResult> Delete(int id, int userId)
         {
-            var skill = _service.GetById(userId, id);
+            var skill = await _service.GetByIdAsync(userId, id);
             if (skill == null)
             {
                 return NotFound();
@@ -99,11 +95,10 @@ namespace MVC.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
-        public IActionResult DeleteConfirmed(int id, int userId)
+        public async Task<IActionResult> DeleteConfirmed(int id, int userId)
         {
-            _service.Delete(userId, id);
-            return RedirectToAction("Index", new { userId = userId });
+            await _service.DeleteAsync(userId, id);
+            return RedirectToAction("Index", new { userId });
         }
-
     }
 }

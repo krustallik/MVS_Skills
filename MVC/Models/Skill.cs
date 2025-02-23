@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MVC.Models
 {
@@ -11,14 +12,20 @@ namespace MVC.Models
         public string Title { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Колір є обов’язковим")]
-        [RegularExpression("^#([A-Fa-f0-9]{6})$", ErrorMessage = "Невірний формат кольору (очікується, наприклад, #FFFFFF)")]
+        [RegularExpression("^#([A-Fa-f0-9]{6})$", ErrorMessage = "Невірний формат кольору (наприклад, #FFFFFF)")]
         public string Color { get; set; } = "#FFFFFF";
 
-        // Нова властивість – рівень володіння (наприклад, від 1 до 100)
         [Required(ErrorMessage = "Вкажіть рівень володіння навичкою")]
         [Range(1, 100, ErrorMessage = "Рівень має бути від 1 до 100")]
         public int Level { get; set; }
 
         public string? LogoPath { get; set; }
+
+        // Зовнішній ключ до користувача
+        [ForeignKey("UserInfo")]
+        public int UserInfoId { get; set; }
+
+        // Навігаційна властивість
+        public virtual UserInfo? UserInfo { get; set; }
     }
 }

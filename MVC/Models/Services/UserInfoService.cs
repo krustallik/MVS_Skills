@@ -1,53 +1,47 @@
-﻿using System.Text.Json;
+﻿using MVC.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace MVC.Models.Services;
-
-public class UserInfoService
+namespace MVC.Models.Services
 {
-    public UserInfoService()
+    public class UserInfoService
     {
-        Load();
-    }
-
-    private string userDataFile = "user-info.json";
-
-    private List<UserInfo> UserInfos { get; set; } = [];
-
-    public void Load()
-    {
-        if (File.Exists(userDataFile))
+        private readonly SiteContext _context;
+        public UserInfoService(SiteContext context)
         {
-            UserInfos = JsonSerializer.Deserialize<List<UserInfo>>(File.ReadAllText(userDataFile));
+            _context = context;
+        }
+
+        public async Task<List<UserInfo>> GetAllAsync()
+        {
+            return await _context.UserInfos.Include(u => u.Skills).ToListAsync();
+        }
+
+        public async Task<UserInfo?> FindByIdAsync(int id)
+        {
+            return await _context.UserInfos.Include(u => u.Skills)
+                                           .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
+        public async Task AddAsync(UserInfo user)
+        {
+            _context.UserInfos.Add(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteByIdAsync(int id)
+        {
+            var user = await FindByIdAsync(id);
+            if (user != null)
+            {
+                _context.UserInfos.Remove(user);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // Додано метод SaveChangesAsync для збереження змін
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
     }
-
-    public List<UserInfo> GetAll() { 
-        return UserInfos;
-    }
-
-    public void Add(UserInfo model)
-    {
-        UserInfos.Add(model);
-    }
-    
-
-    public UserInfo? FindById(int id)
-    {
-        return UserInfos.FirstOrDefault(x => x.Id == id);
-    }
-
-    public void SaveChanges()
-    {
-        File.WriteAllText(userDataFile, JsonSerializer.Serialize(UserInfos));
-    }
-
-    public void DeleteById(int id)
-    {
-        var user = FindById(id);
-        if (user != null)
-        {
-            UserInfos.Remove(user);
-        }
-    }
-
 }

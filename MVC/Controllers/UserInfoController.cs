@@ -2,7 +2,6 @@
 using MVC.Models;
 using MVC.Models.Forms;
 using MVC.Models.Services;
-using MVC.Models.Services;
 
 namespace MVC.Controllers
 {
@@ -26,20 +25,18 @@ namespace MVC.Controllers
         }
 
         // Перегляд списку користувачів
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View(_userService.GetAll());
+            var users = await _userService.GetAllAsync();
+            return View(users);
         }
 
         // Перегляд інформації про користувача із завантаженням його навичок
-        public IActionResult View(int id)
+        public async Task<IActionResult> View(int id)
         {
-            var user = _userService.FindById(id);
-            if (user != null)
-            {
-                // Завантажуємо навички для цього користувача із файлу skills_{user.Id}.json
-                user.Skills = _skillService.GetAll(user.Id);
-            }
+            var user = await _userService.FindByIdAsync(id);
+            // Якщо навички не завантажуються автоматично через Include, можна додатково їх отримати:
+            // user.Skills = await _skillService.GetAllAsync(user.Id);
             return View(user);
         }
 
@@ -51,7 +48,7 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create([FromForm] UserInfoForm form)
+        public async Task<IActionResult> Create([FromForm] UserInfoForm form)
         {
             if (!ModelState.IsValid)
             {
@@ -61,27 +58,16 @@ namespace MVC.Controllers
             var model = new UserInfo();
             form.Update(model);
 
-            // Призначення випадкового Id, яке не повторюється
-            var random = new Random();
-            do
-            {
-                var id = random.Next(1, 10000);
-                if (_userService.FindById(id) != null)
-                {
-                    continue;
-                }
-                model.Id = id;
-            } while (model.Id == 0);
+            // В EF Core Id генерується автоматично, тому не потрібно призначати його вручну
 
             // Обробка завантаження фотографій
             if (form.Photos != null && form.Photos.Any())
             {
                 foreach (var photo in form.Photos)
                 {
-                    var photoPath = SaveUserPhoto(photo, model.Id);
+                    var photoPath = SaveUserPhoto(photo);
                     model.PhotoPaths.Add(photoPath);
                 }
-                // Якщо аватар ще не задано, вибираємо перше фото як аватар
                 if (model.PhotoPaths.Any())
                 {
                     model.AvatarPhoto = model.PhotoPaths.First();
@@ -89,49 +75,45 @@ namespace MVC.Controllers
             }
             else
             {
-                // Ініціалізуємо порожній список, якщо фото не завантажено
                 model.PhotoPaths = new List<string>();
             }
 
-            // Ініціалізуємо порожній список навичок для нового користувача
-            _skillService.SaveAll(model.Id, new List<Skill>());
-
-            _userService.Add(model);
-            _userService.SaveChanges();
+            await _userService.AddAsync(model);
             return RedirectToAction("Index");
         }
 
         [HttpGet]
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            ViewData["id"] = id;
-            return View(new UserInfoForm(_userService.FindById(id)));
+            var user = await _userService.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return View(new UserInfoForm(user));
         }
 
         [HttpPost]
-        public IActionResult EditPost(int id, [FromForm] UserInfoForm form)
+        public async Task<IActionResult> EditPost(int id, [FromForm] UserInfoForm form)
         {
             if (!ModelState.IsValid)
             {
-                ViewData["id"] = id;
                 return View("Edit", form);
             }
 
-            var model = _userService.FindById(id);
+            var model = await _userService.FindByIdAsync(id);
             if (model == null)
             {
                 return NotFound();
             }
 
-            // Оновлюємо дані користувача з форми
             form.Update(model);
 
-            // Обробка нових фотографій (якщо завантажено)
             if (form.Photos != null && form.Photos.Any())
             {
                 foreach (var photo in form.Photos)
                 {
-                    var photoPath = SaveUserPhoto(photo, model.Id);
+                    var photoPath = SaveUserPhoto(photo);
                     model.PhotoPaths.Add(photoPath);
                 }
                 if (string.IsNullOrEmpty(model.AvatarPhoto) && model.PhotoPaths.Any())
@@ -140,11 +122,11 @@ namespace MVC.Controllers
                 }
             }
 
-            _userService.SaveChanges();
+            await _userService.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
-        private string SaveUserPhoto(IFormFile file, int userId)
+        private string SaveUserPhoto(IFormFile file)
         {
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
@@ -160,7 +142,7 @@ namespace MVC.Controllers
                 Directory.CreateDirectory(uploadsFolder);
             }
 
-            string uniqueFileName = $"user_{userId}_{Guid.NewGuid()}{fileExtension}";
+            string uniqueFileName = $"user_{Guid.NewGuid()}{fileExtension}";
             string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
             using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -171,30 +153,32 @@ namespace MVC.Controllers
             return $"/images/users/{uniqueFileName}";
         }
 
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var user = _userService.FindById(id);
-            if (user != null)
+            var user = await _userService.FindByIdAsync(id);
+            if (user == null)
             {
-                _userService.DeleteById(id);
-                _userService.SaveChanges();
-                // При бажанні можна видалити і файл з навичками для цього користувача
-                // (реалізація видалення файлу може бути додана до SkillService)
+                return NotFound();
             }
+            return View(user);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            await _userService.DeleteByIdAsync(id);
             return RedirectToAction("Index");
         }
 
-        public IActionResult SetAvatar(int id, string photo)
+        public async Task<IActionResult> SetAvatar(int id, string photo)
         {
-            var user = _userService.FindById(id);
+            var user = await _userService.FindByIdAsync(id);
             if (user != null && user.PhotoPaths.Contains(photo))
             {
                 user.AvatarPhoto = photo;
-                _userService.SaveChanges();
+                await _userService.SaveChangesAsync();
             }
             return RedirectToAction("View", new { id });
         }
-
-
     }
 }

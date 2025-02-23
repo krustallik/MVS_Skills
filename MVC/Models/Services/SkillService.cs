@@ -1,115 +1,70 @@
-﻿using System.Text.Json;
-using MVC.Models;
+﻿using MVC.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace MVC.Models.Services
 {
     public class SkillService
     {
-        private readonly IWebHostEnvironment _env;
-
-        public SkillService(IWebHostEnvironment env)
+        private readonly SiteContext _context;
+        public SkillService(SiteContext context)
         {
-            _env = env;
+            _context = context;
         }
 
-        /// <summary>
-        /// Формує шлях до файлу для збереження навичок конкретного користувача.
-        /// </summary>
-        private string GetFilePath(int userId)
+        public async Task<List<Skill>> GetAllAsync(int userId)
         {
-            var folder = Path.Combine(_env.ContentRootPath, "App_Data");
-            if (!Directory.Exists(folder))
-            {
-                Directory.CreateDirectory(folder);
-            }
-            return Path.Combine(folder, $"skills_{userId}.json");
+            return await _context.Skills.Where(s => s.UserInfoId == userId).ToListAsync();
         }
 
-        public List<Skill> GetAll(int userId)
+        public async Task<Skill?> GetByIdAsync(int userId, int id)
         {
-            var filePath = GetFilePath(userId);
-            if (!File.Exists(filePath))
-            {
-                return new List<Skill>();
-            }
-            var json = File.ReadAllText(filePath);
-            return JsonSerializer.Deserialize<List<Skill>>(json) ?? new List<Skill>();
+            return await _context.Skills.FirstOrDefaultAsync(s => s.UserInfoId == userId && s.Id == id);
         }
 
-        public void SaveAll(int userId, List<Skill> skills)
+        public async Task AddAsync(int userId, Skill skill, IFormFile? file = null)
         {
-            var filePath = GetFilePath(userId);
-            var json = JsonSerializer.Serialize(skills, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(filePath, json);
-        }
+            // Призначаємо користувачу
+            skill.UserInfoId = userId;
 
-        public Skill? GetById(int userId, int id)
-        {
-            var skills = GetAll(userId);
-            return skills.FirstOrDefault(s => s.Id == id);
-        }
-
-        /// <summary>
-        /// Додає нову навичку.
-        /// </summary>
-        public void Add(int userId, Skill skill, IFormFile? file)
-        {
-                var skills = GetAll(userId);
-
-            // Призначаємо новий ID
-            skill.Id = (skills.Any() ? skills.Max(s => s.Id) : 0) + 1;
-
-            // Обробка логотипу
+            // Обробка логотипу, якщо потрібно
             if (file != null && file.Length > 0)
             {
                 skill.LogoPath = SaveImage(file, userId, skill.Id);
             }
-
-            skills.Add(skill);
-            SaveAll(userId, skills);
+            _context.Skills.Add(skill);
+            await _context.SaveChangesAsync();
         }
 
-        /// <summary>
-        /// Оновлює навичку.
-        /// </summary>
-        public void Update(int userId, Skill skill, IFormFile? file)
+        public async Task UpdateAsync(int userId, Skill skill, IFormFile? file = null)
         {
-            var skills = GetAll(userId);
-            var existing = skills.FirstOrDefault(s => s.Id == skill.Id);
+            var existing = await GetByIdAsync(userId, skill.Id);
             if (existing != null)
             {
                 existing.Title = skill.Title;
                 existing.Color = skill.Color;
+                existing.Level = skill.Level;
 
-                // Якщо додається новий файл, замінюємо логотип
                 if (file != null && file.Length > 0)
                 {
-                    DeleteImage(existing.LogoPath); // Видаляємо старий файл
+                    DeleteImage(existing.LogoPath);
                     existing.LogoPath = SaveImage(file, userId, skill.Id);
                 }
-
-                SaveAll(userId, skills);
+                await _context.SaveChangesAsync();
             }
         }
 
-        /// <summary>
-        /// Видаляє навичку.
-        /// </summary>
-        public void Delete(int userId, int id)
+        public async Task DeleteAsync(int userId, int id)
         {
-            var skills = GetAll(userId);
-            var toRemove = skills.FirstOrDefault(s => s.Id == id);
-            if (toRemove != null)
+            var skill = await GetByIdAsync(userId, id);
+            if (skill != null)
             {
-                DeleteImage(toRemove.LogoPath);
-                skills.Remove(toRemove);
-                SaveAll(userId, skills);
+                DeleteImage(skill.LogoPath);
+                _context.Skills.Remove(skill);
+                await _context.SaveChangesAsync();
             }
         }
 
-        /// <summary>
-        /// Зберігає зображення у wwwroot/images/skills.
-        /// </summary>
+        // Методи SaveImage та DeleteImage можуть залишитись подібними до існуючих, оскільки вони відповідають за збереження файлів у wwwroot
         private string SaveImage(IFormFile file, int userId, int skillId)
         {
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
@@ -120,7 +75,7 @@ namespace MVC.Models.Services
                 throw new InvalidOperationException("Файл повинен бути зображенням (.jpg, .jpeg, .png, .gif)");
             }
 
-            string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "skills");
+            string uploadsFolder = Path.Combine(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"), "images", "skills");
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
@@ -136,14 +91,12 @@ namespace MVC.Models.Services
 
             return $"/images/skills/{uniqueFileName}";
         }
-        /// <summary>
-        /// Видаляє зображення.
-        /// </summary>
+
         private void DeleteImage(string? filePath)
         {
             if (!string.IsNullOrEmpty(filePath))
             {
-                string fullPath = Path.Combine(_env.WebRootPath, filePath.TrimStart('/'));
+                string fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", filePath.TrimStart('/'));
                 if (File.Exists(fullPath))
                 {
                     File.Delete(fullPath);
