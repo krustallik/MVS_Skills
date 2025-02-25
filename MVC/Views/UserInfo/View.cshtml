@@ -35,10 +35,11 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Model.Skills != null && Model.Skills.Any())
+                @if (Model.UserSkills != null && Model.UserSkills.Any())
                 {
-                    foreach (var skill in Model.Skills)
+                    foreach (var UserSkill in Model.UserSkills)
                     {
+                        var skill = UserSkill.Skill;
                         <tr>
                             <td>
                                 @if (!string.IsNullOrEmpty(skill.LogoPath))

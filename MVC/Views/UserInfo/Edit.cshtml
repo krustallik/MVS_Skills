@@ -8,7 +8,7 @@
     <h1 class="display-4">@ViewData["Title"]</h1>
     <form method="post" enctype="multipart/form-data" asp-controller="UserInfo" asp-action="EditPost">
         <!-- Передаємо id через приховане поле -->
-        <input type="hidden" name="id" value="@ViewData["id"]" />
+        @Html.HiddenFor(x => x.Id)
         <div class="card">
             <div class="card-body">
                 <div class="mb-3">

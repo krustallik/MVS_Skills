@@ -21,11 +21,6 @@ namespace MVC.Models
 
         public string? LogoPath { get; set; }
 
-        // Зовнішній ключ до користувача
-        [ForeignKey("UserInfo")]
-        public int UserInfoId { get; set; }
-
-        // Навігаційна властивість
-        public virtual UserInfo? UserInfo { get; set; }
+        public virtual ICollection<UserSkill> UserSkills { get; set; } = new List<UserSkill>();
     }
 }

@@ -35,48 +35,23 @@ namespace MVC.Controllers
         public async Task<IActionResult> View(int id)
         {
             var user = await _userService.FindByIdAsync(id);
-            // Якщо навички не завантажуються автоматично через Include, можна додатково їх отримати:
-            // user.Skills = await _skillService.GetAllAsync(user.Id);
-            return View(user);
+            return user == null ? NotFound() : View(user);
         }
 
         [HttpGet]
-        public IActionResult Create()
-        {
-            var model = new UserInfoForm(new UserInfo());
-            return View(model);
-        }
+        public IActionResult Create() => View(new UserInfoForm(new UserInfo()));
 
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] UserInfoForm form)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(form);
-            }
+            if (!ModelState.IsValid) return View(form);
 
             var model = new UserInfo();
             form.Update(model);
 
-            // В EF Core Id генерується автоматично, тому не потрібно призначати його вручну
-
-            // Обробка завантаження фотографій
-            if (form.Photos != null && form.Photos.Any())
-            {
-                foreach (var photo in form.Photos)
-                {
-                    var photoPath = SaveUserPhoto(photo);
-                    model.PhotoPaths.Add(photoPath);
-                }
-                if (model.PhotoPaths.Any())
-                {
-                    model.AvatarPhoto = model.PhotoPaths.First();
-                }
-            }
-            else
-            {
-                model.PhotoPaths = new List<string>();
-            }
+            // Обробка завантаження фото
+            model.PhotoPaths = ProcessUploadedPhotos(form.Photos);
+            model.AvatarPhoto = model.PhotoPaths.FirstOrDefault();
 
             await _userService.AddAsync(model);
             return RedirectToAction("Index");
@@ -86,99 +61,119 @@ namespace MVC.Controllers
         public async Task<IActionResult> Edit(int id)
         {
             var user = await _userService.FindByIdAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            return View(new UserInfoForm(user));
+            return user == null ? NotFound() : View(new UserInfoForm(user));
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditPost(int id, [FromForm] UserInfoForm form)
+        public async Task<IActionResult> EditPost([FromForm] UserInfoForm form)
         {
+            Console.WriteLine($"ID з форми: {form.Id}");
+
             if (!ModelState.IsValid)
             {
+                foreach (var modelError in ModelState)
+                {
+                    foreach (var error in modelError.Value.Errors)
+                    {
+                        Console.WriteLine($"Поле: {modelError.Key} - Помилка: {error.ErrorMessage}");
+                    }
+                }
                 return View("Edit", form);
             }
 
-            var model = await _userService.FindByIdAsync(id);
-            if (model == null)
-            {
-                return NotFound();
-            }
+            var model = await _userService.FindByIdAsync(form.Id);
+            if (model == null) return NotFound();
 
             form.Update(model);
 
+            // Видалення старих фото та збереження нових
             if (form.Photos != null && form.Photos.Any())
             {
-                foreach (var photo in form.Photos)
-                {
-                    var photoPath = SaveUserPhoto(photo);
-                    model.PhotoPaths.Add(photoPath);
-                }
-                if (string.IsNullOrEmpty(model.AvatarPhoto) && model.PhotoPaths.Any())
-                {
-                    model.AvatarPhoto = model.PhotoPaths.First();
-                }
+                DeleteExistingPhotos(model);
+                model.PhotoPaths = ProcessUploadedPhotos(form.Photos);
+                model.AvatarPhoto = model.PhotoPaths.FirstOrDefault();
             }
 
             await _userService.SaveChangesAsync();
             return RedirectToAction("Index");
         }
 
-        private string SaveUserPhoto(IFormFile file)
-        {
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            var fileExtension = Path.GetExtension(file.FileName).ToLower();
-
-            if (!allowedExtensions.Contains(fileExtension))
-            {
-                throw new InvalidOperationException("Файл повинен бути зображенням (.jpg, .jpeg, .png, .gif)");
-            }
-
-            string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "users");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            string uniqueFileName = $"user_{Guid.NewGuid()}{fileExtension}";
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
-            {
-                file.CopyTo(fileStream);
-            }
-
-            return $"/images/users/{uniqueFileName}";
-        }
-
         public async Task<IActionResult> Delete(int id)
         {
             var user = await _userService.FindByIdAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            return View(user);
+            return user == null ? NotFound() : View(user);
         }
 
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var user = await _userService.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            DeleteExistingPhotos(user);
             await _userService.DeleteByIdAsync(id);
+
             return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> SetAvatar(int id, string photo)
         {
             var user = await _userService.FindByIdAsync(id);
-            if (user != null && user.PhotoPaths.Contains(photo))
-            {
-                user.AvatarPhoto = photo;
-                await _userService.SaveChangesAsync();
-            }
+            if (user == null || !user.PhotoPaths.Contains(photo)) return NotFound();
+
+            user.AvatarPhoto = photo;
+            await _userService.SaveChangesAsync();
             return RedirectToAction("View", new { id });
+        }
+
+        // 🔥 Оптимізовані допоміжні методи
+
+        /// <summary>
+        /// Зберігає завантажені фото та повертає їхні шляхи.
+        /// </summary>
+        private List<string> ProcessUploadedPhotos(List<IFormFile>? photos)
+        {
+            var photoPaths = new List<string>();
+            if (photos == null || !photos.Any()) return photoPaths;
+
+            string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "users");
+            Directory.CreateDirectory(uploadsFolder); // Створює папку, якщо вона не існує
+
+            foreach (var photo in photos)
+            {
+                var fileExtension = Path.GetExtension(photo.FileName).ToLower();
+                if (!new[] { ".jpg", ".jpeg", ".png", ".gif" }.Contains(fileExtension))
+                {
+                    throw new InvalidOperationException("Файл повинен бути зображенням (.jpg, .jpeg, .png, .gif)");
+                }
+
+                string uniqueFileName = $"user_{Guid.NewGuid()}{fileExtension}";
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using var fileStream = new FileStream(filePath, FileMode.Create);
+                photo.CopyTo(fileStream);
+
+                photoPaths.Add($"/images/users/{uniqueFileName}");
+            }
+
+            return photoPaths;
+        }
+
+        /// <summary>
+        /// Видаляє існуючі фото користувача.
+        /// </summary>
+        private void DeleteExistingPhotos(UserInfo user)
+        {
+            foreach (var photoPath in user.PhotoPaths)
+            {
+                string fullPath = Path.Combine(_env.WebRootPath, photoPath.TrimStart('/'));
+                if (System.IO.File.Exists(fullPath))
+                {
+                    System.IO.File.Delete(fullPath);
+                }
+            }
+            user.PhotoPaths.Clear();
+            user.AvatarPhoto = null;
         }
     }
 }

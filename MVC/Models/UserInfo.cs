@@ -11,11 +11,7 @@
         public int ExpirienseYears { get; set; }
         public decimal Salary { get; set; }
         public string? Profession { get; set; }
-
-        // Колекція навичок, які належать користувачу
-        public virtual ICollection<Skill> Skills { get; set; } = new List<Skill>();
-
-        // Залишаємо збереження фотографій на файловій системі, але шляхи можна зберігати в БД
+        public virtual ICollection<UserSkill> UserSkills { get; set; } = new List<UserSkill>();
         public List<string> PhotoPaths { get; set; } = new List<string>();
         public string? AvatarPhoto { get; set; }
     }

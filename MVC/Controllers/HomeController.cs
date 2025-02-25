@@ -28,12 +28,6 @@ namespace MVC.Controllers
         // /Home/Hello
         public IActionResult Hello()
         {
-            // Демонстраційний приклад, тут можна використовувати модель без БД
-            List<Skill> list = new List<Skill>
-            {
-                //new Skill { Title = "C", Level = 50 },
-                //...
-            };
 
             UserInfo user = new UserInfo
             {
@@ -45,7 +39,6 @@ namespace MVC.Controllers
                 IsActive = true,
                 ExpirienseYears = 5,
                 Salary = 70000,
-                Skills = list
             };
 
             return View(user);

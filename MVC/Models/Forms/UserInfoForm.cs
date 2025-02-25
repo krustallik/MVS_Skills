@@ -10,8 +10,11 @@ public class UserInfoForm
 {
     public UserInfoForm() { }
 
+    public int Id { get; set; } 
+
     public UserInfoForm(UserInfo model)
     {
+        Id = model.Id;
         Name = model.Name;
         Email = model.Email;
         Description = model.Description;

@@ -97,7 +97,7 @@ namespace MVC.Controllers
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id, int userId)
         {
-            await _service.DeleteAsync(userId, id);
+            await _service.RemoveSkillFromUserAsync(userId, id);
             return RedirectToAction("Index", new { userId });
         }
     }
