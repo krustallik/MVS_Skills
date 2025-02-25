@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MVC.Migrations
 {
     [DbContext(typeof(SiteContext))]
-    [Migration("20250225170223_M-N")]
-    partial class MN
+    [Migration("20250225183026_Level")]
+    partial class Level
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -30,10 +30,8 @@ namespace MVC.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Level")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("LogoPath")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
@@ -95,6 +93,9 @@ namespace MVC.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("SkillId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Level")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("UserInfoId", "SkillId");

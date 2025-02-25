@@ -6,11 +6,26 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MVC.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Level : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Skills",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Title = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Color = table.Column<string>(type: "TEXT", nullable: false),
+                    LogoPath = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Skills", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "UserInfos",
                 columns: table => new
@@ -34,22 +49,24 @@ namespace MVC.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Skills",
+                name: "UserSkills",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Color = table.Column<string>(type: "TEXT", nullable: false),
-                    Level = table.Column<int>(type: "INTEGER", nullable: false),
-                    LogoPath = table.Column<string>(type: "TEXT", nullable: true),
-                    UserInfoId = table.Column<int>(type: "INTEGER", nullable: false)
+                    UserInfoId = table.Column<int>(type: "INTEGER", nullable: false),
+                    SkillId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Level = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Skills", x => x.Id);
+                    table.PrimaryKey("PK_UserSkills", x => new { x.UserInfoId, x.SkillId });
                     table.ForeignKey(
-                        name: "FK_Skills_UserInfos_UserInfoId",
+                        name: "FK_UserSkills_Skills_SkillId",
+                        column: x => x.SkillId,
+                        principalTable: "Skills",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserSkills_UserInfos_UserInfoId",
                         column: x => x.UserInfoId,
                         principalTable: "UserInfos",
                         principalColumn: "Id",
@@ -57,14 +74,17 @@ namespace MVC.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Skills_UserInfoId",
-                table: "Skills",
-                column: "UserInfoId");
+                name: "IX_UserSkills_SkillId",
+                table: "UserSkills",
+                column: "SkillId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "UserSkills");
+
             migrationBuilder.DropTable(
                 name: "Skills");
 

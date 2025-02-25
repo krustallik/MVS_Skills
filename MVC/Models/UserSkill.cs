@@ -9,6 +9,7 @@ namespace MVC.Models
         public int UserInfoId { get; set; }
         public int SkillId { get; set; }
 
+        public int Level {  get; set; }
         public virtual UserInfo UserInfo { get; set; } = null!;
         public virtual Skill Skill { get; set; } = null!;
     }

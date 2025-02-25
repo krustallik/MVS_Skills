@@ -27,10 +27,8 @@ namespace MVC.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Level")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("LogoPath")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
@@ -92,6 +90,9 @@ namespace MVC.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("SkillId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Level")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("UserInfoId", "SkillId");

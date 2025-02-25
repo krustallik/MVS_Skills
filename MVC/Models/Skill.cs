@@ -15,12 +15,11 @@ namespace MVC.Models
         [RegularExpression("^#([A-Fa-f0-9]{6})$", ErrorMessage = "Невірний формат кольору (наприклад, #FFFFFF)")]
         public string Color { get; set; } = "#FFFFFF";
 
-        [Required(ErrorMessage = "Вкажіть рівень володіння навичкою")]
-        [Range(1, 100, ErrorMessage = "Рівень має бути від 1 до 100")]
-        public int Level { get; set; }
+        // Поле Level видаляється з цієї моделі!
 
         public string? LogoPath { get; set; }
 
         public virtual ICollection<UserSkill> UserSkills { get; set; } = new List<UserSkill>();
     }
+
 }

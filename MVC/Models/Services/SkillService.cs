@@ -17,30 +17,24 @@ namespace MVC.Models.Services
             _context = context;
         }
 
-        // Отримати всі навички конкретного користувача
-        public async Task<List<Skill>> GetAllAsync(int userId)
+        public async Task<List<UserSkill>> GetAllAsync(int userId)
         {
             return await _context.UserSkills
                                  .Where(us => us.UserInfoId == userId)
-                                 .Select(us => us.Skill)
+                                 .Include(us => us.Skill)
                                  .ToListAsync();
         }
 
-        // Отримати конкретну навичку користувача
-        public async Task<Skill?> GetByIdAsync(int userId, int skillId)
+        public async Task<UserSkill?> GetByIdAsync(int userId, int skillId)
         {
             return await _context.UserSkills
-                                 .Where(us => us.UserInfoId == userId && us.SkillId == skillId)
-                                 .Select(us => us.Skill)
-                                 .FirstOrDefaultAsync();
+                                 .Include(us => us.Skill)
+                                 .FirstOrDefaultAsync(us => us.UserInfoId == userId && us.SkillId == skillId);
         }
 
-        // Додати нову навичку користувачеві
-        public async Task AddAsync(int userId, Skill skill, IFormFile? file = null)
+        public async Task AddAsync(int userId, Skill skill, int level, IFormFile? file = null)
         {
-            // Додаємо саму навичку, якщо її ще немає в БД
-            var existingSkill = await _context.Skills
-                                              .FirstOrDefaultAsync(s => s.Title == skill.Title);
+            var existingSkill = await _context.Skills.FirstOrDefaultAsync(s => s.Title == skill.Title);
 
             if (existingSkill == null)
             {
@@ -53,47 +47,45 @@ namespace MVC.Models.Services
                 existingSkill = skill;
             }
 
-            // Створюємо зв'язок між користувачем і навичкою
             var userSkill = new UserSkill
             {
                 UserInfoId = userId,
-                SkillId = existingSkill.Id
+                SkillId = existingSkill.Id,
+                Level = level
             };
 
             _context.UserSkills.Add(userSkill);
             await _context.SaveChangesAsync();
         }
 
-        // Оновити навичку (дозволяється змінювати рівень, колір, лого)
-        public async Task UpdateAsync(int userId, Skill updatedSkill, IFormFile? file = null)
+
+        public async Task UpdateAsync(int userId, int skillId, string newTitle, string newColor, int newLevel, IFormFile? file = null)
         {
-            var existingSkill = await GetByIdAsync(userId, updatedSkill.Id);
-            if (existingSkill != null)
+            var userSkill = await GetByIdAsync(userId, skillId);
+            if (userSkill != null)
             {
-                existingSkill.Title = updatedSkill.Title;
-                existingSkill.Color = updatedSkill.Color;
-                existingSkill.Level = updatedSkill.Level;
+                userSkill.Level = newLevel;
+                userSkill.Skill.Title = newTitle;
+                userSkill.Skill.Color = newColor;
 
                 if (file != null && file.Length > 0)
                 {
-                    if (existingSkill.LogoPath != null)
+                    if (!string.IsNullOrEmpty(userSkill.Skill.LogoPath))
                     {
-                        Directory.Delete(existingSkill.LogoPath);
+                        DeleteImage(userSkill.Skill.LogoPath);
                     }
-                    existingSkill.LogoPath = SaveImage(file, userId);
+                    userSkill.Skill.LogoPath = SaveImage(file, userId);
                 }
 
-                _context.Skills.Update(existingSkill);
                 await _context.SaveChangesAsync();
             }
         }
 
-        // Видалити навичку у конкретного користувача (не видаляє саму навичку з БД)
+
         public async Task RemoveSkillFromUserAsync(int userId, int skillId)
         {
             var userSkill = await _context.UserSkills
                                           .FirstOrDefaultAsync(us => us.UserInfoId == userId && us.SkillId == skillId);
-
             if (userSkill != null)
             {
                 _context.UserSkills.Remove(userSkill);
@@ -101,29 +93,22 @@ namespace MVC.Models.Services
             }
         }
 
-        // Видалити навичку з БД (з усіх користувачів)
         public async Task DeleteAsync(int skillId)
         {
-            var skill = await _context.Skills
-                                      .Include(s => s.UserSkills)
-                                      .FirstOrDefaultAsync(s => s.Id == skillId);
-
+            var skill = await _context.Skills.Include(s => s.UserSkills)
+                                             .FirstOrDefaultAsync(s => s.Id == skillId);
             if (skill != null)
             {
-                // Видаляємо всі зв’язки
                 _context.UserSkills.RemoveRange(skill.UserSkills);
-
-                // Видаляємо саме вміння
-                if (skill.LogoPath != null)
+                if (!string.IsNullOrEmpty(skill.LogoPath))
                 {
-                    Directory.Delete(skill.LogoPath);
+                    DeleteImage(skill.LogoPath);
                 }
                 _context.Skills.Remove(skill);
                 await _context.SaveChangesAsync();
             }
         }
 
-        // Збереження зображення
         private string SaveImage(IFormFile file, int userId)
         {
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
@@ -135,10 +120,7 @@ namespace MVC.Models.Services
             }
 
             string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "skills");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
+            Directory.CreateDirectory(uploadsFolder);
 
             string uniqueFileName = $"user_{userId}_skill_{Guid.NewGuid()}{fileExtension}";
             string filePath = Path.Combine(uploadsFolder, uniqueFileName);
@@ -149,6 +131,18 @@ namespace MVC.Models.Services
             }
 
             return $"/images/skills/{uniqueFileName}";
+        }
+
+        private void DeleteImage(string? filePath)
+        {
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                string fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", filePath.TrimStart('/'));
+                if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                }
+            }
         }
     }
 }

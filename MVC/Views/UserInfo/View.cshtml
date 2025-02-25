@@ -37,9 +37,9 @@
             <tbody>
                 @if (Model.UserSkills != null && Model.UserSkills.Any())
                 {
-                    foreach (var UserSkill in Model.UserSkills)
+                    foreach (var userSkill in Model.UserSkills)
                     {
-                        var skill = UserSkill.Skill;
+                        var skill = userSkill.Skill;
                         <tr>
                             <td>
                                 @if (!string.IsNullOrEmpty(skill.LogoPath))
@@ -57,7 +57,7 @@
                                     @skill.Color
                                 </span>
                             </td>
-                            <td>@skill.Level</td>
+                            <td>@userSkill.Level</td>
                         </tr>
                     }
                 }
@@ -74,15 +74,13 @@
         <a asp-controller="UserInfo" asp-action="Index" class="btn btn-outline-success">Return</a>
     </div>
 </div>
-
 <hr />
-
 <!-- Галерея фото користувача -->
 <h3>Фото користувача</h3>
 <div class="d-flex flex-wrap">
     @if (Model.PhotoPaths != null && Model.PhotoPaths.Any())
     {
-        @foreach (var photo in Model.PhotoPaths)
+        foreach (var photo in Model.PhotoPaths)
         {
             <a asp-action="SetAvatar" asp-route-id="@Model.Id" asp-route-photo="@photo" title="Натисніть, щоб встановити як аватарку">
                 <img src="@photo" alt="User Photo" class="img-thumbnail m-1" style="width:100px; height:100px;" />

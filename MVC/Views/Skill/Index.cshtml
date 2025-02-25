@@ -1,45 +1,47 @@
-﻿@model List<MVC.Models.Skill>
+﻿@model List<MVC.Models.UserSkill>
 @{
     ViewData["Title"] = "Список навичок";
     var userId = (int)ViewBag.UserId;
 }
-
 <h1>Список навичок для користувача з id = @userId</h1>
 <a asp-action="Create" asp-route-userId="@userId" class="btn btn-primary">Створити нову навичку</a>
-
 <table class="table table-bordered mt-3">
     <thead>
         <tr>
             <th>Логотип</th>
             <th>Назва</th>
             <th>Колір</th>
+            <th>Рівень</th>
             <th>Дії</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var skill in Model)
+        @foreach (var userSkill in Model)
         {
             <tr>
                 <td>
-                    @if (!string.IsNullOrEmpty(skill.LogoPath))
+                    @if (!string.IsNullOrEmpty(userSkill.Skill.LogoPath))
                     {
-                        <img src="@skill.LogoPath" alt="Логотип" width="80" height="80" class="img-thumbnail" />
+                        <img src="@userSkill.Skill.LogoPath" alt="Логотип" width="80" height="80" class="img-thumbnail" />
                     }
                     else
                     {
                         <span class="text-muted">Немає логотипу</span>
                     }
                 </td>
-                <td>@skill.Title</td>
-                <td>@skill.Level</td>
+                <td>@userSkill.Skill.Title</td>
                 <td>
-                    <span style="background-color:@skill.Color; padding:5px 10px; color:white;">
-                        @skill.Color
+                    <span style="background-color:@userSkill.Skill.Color; padding:5px 10px; color:white;">
+                        @userSkill.Skill.Color
                     </span>
                 </td>
+                <td>@userSkill.Level</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@skill.Id" asp-route-userId="@userId" class="btn btn-warning btn-sm">Редагувати</a>
-                    <a asp-action="Delete" asp-route-id="@skill.Id" asp-route-userId="@userId" class="btn btn-danger btn-sm">Видалити</a>
+                    <a asp-action="Edit" asp-route-id="@userSkill.SkillId" asp-route-userId="@userId" class="btn btn-warning btn-sm">Редагувати</a>
+                    <form asp-action="Delete" asp-route-skillId="@userSkill.SkillId" asp-route-userId="@userId" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Ви впевнені, що хочете видалити цю навичку?');">Видалити</button>
+                    </form>
+
                 </td>
             </tr>
         }
