@@ -3,8 +3,13 @@
     ViewData["Title"] = "Список навичок";
     var userId = (int)ViewBag.UserId;
 }
+
 <h1>Список навичок для користувача з id = @userId</h1>
+
+<!-- Кнопка для створення нової навички -->
 <a asp-action="Create" asp-route-userId="@userId" class="btn btn-primary">Створити нову навичку</a>
+
+<!-- Таблиця зі списком навичок -->
 <table class="table table-bordered mt-3">
     <thead>
         <tr>
@@ -19,6 +24,7 @@
         @foreach (var userSkill in Model)
         {
             <tr>
+                <!-- Відображення логотипу навички -->
                 <td>
                     @if (!string.IsNullOrEmpty(userSkill.Skill.LogoPath))
                     {
@@ -29,19 +35,22 @@
                         <span class="text-muted">Немає логотипу</span>
                     }
                 </td>
+                <!-- Відображення назви навички -->
                 <td>@userSkill.Skill.Title</td>
+                <!-- Відображення кольору навички -->
                 <td>
                     <span style="background-color:@userSkill.Skill.Color; padding:5px 10px; color:white;">
                         @userSkill.Skill.Color
                     </span>
                 </td>
+                <!-- Відображення рівня володіння навичкою -->
                 <td>@userSkill.Level</td>
+                <!-- Дії: редагування та видалення навички -->
                 <td>
                     <a asp-action="Edit" asp-route-id="@userSkill.SkillId" asp-route-userId="@userId" class="btn btn-warning btn-sm">Редагувати</a>
                     <form asp-action="Delete" asp-route-skillId="@userSkill.SkillId" asp-route-userId="@userId" method="post" style="display:inline;">
                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Ви впевнені, що хочете видалити цю навичку?');">Видалити</button>
                     </form>
-
                 </td>
             </tr>
         }

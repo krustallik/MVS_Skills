@@ -1,0 +1,30 @@
+﻿@model List<MVC.Models.UserInfo>
+
+@if (Model.Any())
+{
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Ім'я</th>
+                <th>Професія</th>
+                <th>Навички</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.Name</td>
+                    <td>@(string.IsNullOrEmpty(user.Profession) ? "Немає професії" : user.Profession)</td>
+                    <td>
+                        @(user.UserSkills.Any() ? string.Join(", ", user.UserSkills.Select(us => us.Skill.Title)) : "Немає навичок")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p class="text-muted">Нічого не знайдено.</p>
+}

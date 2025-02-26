@@ -8,12 +8,14 @@ namespace MVC.Models.Services
     public class UserInfoService
     {
         private readonly SiteContext _context;
+
+        // Конструктор сервісу, що приймає контекст бази даних
         public UserInfoService(SiteContext context)
         {
             _context = context;
         }
 
-        // Отримати всіх користувачів з їхніми навичками
+        // Отримати всіх користувачів разом з їхніми навичками
         public async Task<List<UserInfo>> GetAllAsync()
         {
             return await _context.UserInfos
@@ -31,7 +33,7 @@ namespace MVC.Models.Services
                                  .FirstOrDefaultAsync(u => u.Id == id);
         }
 
-        // Додати нового користувача
+        // Додати нового користувача до бази даних
         public async Task AddAsync(UserInfo user)
         {
             _context.UserInfos.Add(user);
@@ -41,7 +43,6 @@ namespace MVC.Models.Services
         // Видалити користувача за ID
         public async Task DeleteByIdAsync(int id)
         {
-
             var user = await FindByIdAsync(id);
             if (user != null)
             {
@@ -82,14 +83,14 @@ namespace MVC.Models.Services
             }
         }
 
-        // Оновити дані користувача
+        // Оновити інформацію про користувача
         public async Task UpdateAsync(UserInfo user)
         {
             _context.UserInfos.Update(user);
             await _context.SaveChangesAsync();
         }
 
-        // Зберегти зміни
+        // Зберегти зміни в базі даних
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();

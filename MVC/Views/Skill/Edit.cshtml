@@ -3,16 +3,24 @@
     ViewData["Title"] = "Редагування навички";
     var userId = (int)ViewBag.UserId;
 }
+
 <h1>Редагування навички для користувача з id = @userId</h1>
+
+<!-- Форма для редагування навички -->
 <form asp-action="Edit" method="post" enctype="multipart/form-data">
     <input type="hidden" name="userId" value="@userId" />
     <input type="hidden" name="id" value="@Model.SkillId" />
 
+    <!-- вибір назви навички -->
     <div class="form-group">
-        <label for="title">Назва навички</label>
-        <input name="title" class="form-control" value="@Model.Skill.Title" required />
+        <label for="title">Колір</label>
+        <select name="title" class="form-control" asp-items="ViewBag.SkillOptions">
+            <option value="">Оберіть навичку</option>
+        </select>
+        <span class="text-danger"></span>
     </div>
 
+    <!-- Вибір кольору для навички -->
     <div class="form-group">
         <label for="color">Колір</label>
         <select name="color" class="form-control" asp-items="ViewBag.ColorOptions">
@@ -20,16 +28,19 @@
         </select>
     </div>
 
+    <!-- Поле для редагування рівня володіння навичкою -->
     <div class="form-group">
         <label for="level">Рівень володіння</label>
         <input name="level" class="form-control" type="number" min="1" max="100" value="@Model.Level" required />
     </div>
 
+    <!-- Поле для завантаження нового логотипу навички -->
     <div class="form-group">
         <label for="file">Змінити логотип</label>
         <input type="file" name="file" class="form-control" accept="image/png, image/jpeg, image/jpg, image/gif" />
     </div>
 
+    <!-- Кнопки для збереження або скасування -->
     <button type="submit" class="btn btn-primary mt-2">Зберегти</button>
     <a asp-action="Index" asp-route-userId="@userId" class="btn btn-secondary mt-2">Скасувати</a>
 </form>

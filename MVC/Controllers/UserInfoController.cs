@@ -7,11 +7,19 @@ namespace MVC.Controllers
 {
     public class UserInfoController : Controller
     {
+        // Логер для запису інформації про роботу контролера
         private readonly ILogger<UserInfoController> _logger;
+
+        // Сервіс для роботи з інформацією про користувачів
         private readonly UserInfoService _userService;
+
+        // Сервіс для роботи з навичками користувачів
         private readonly SkillService _skillService;
+
+        // Оточення хоста для роботи з файлами
         private readonly IWebHostEnvironment _env;
 
+        // Конструктор контролера, ініціалізує залежності
         public UserInfoController(
             ILogger<UserInfoController> logger,
             UserInfoService userService,
@@ -24,14 +32,14 @@ namespace MVC.Controllers
             _env = env;
         }
 
-        // Перегляд списку користувачів
+        // Відображення списку всіх користувачів
         public async Task<IActionResult> Index()
         {
             var users = await _userService.GetAllAsync();
             return View(users);
         }
 
-        // Перегляд інформації про користувача із завантаженням його навичок
+        // Перегляд інформації про конкретного користувача
         public async Task<IActionResult> View(int id)
         {
             var user = await _userService.FindByIdAsync(id);
@@ -39,9 +47,11 @@ namespace MVC.Controllers
         }
 
         [HttpGet]
+        // Відображення форми для створення нового користувача
         public IActionResult Create() => View(new UserInfoForm(new UserInfo()));
 
         [HttpPost]
+        // Обробка запиту на створення нового користувача
         public async Task<IActionResult> Create([FromForm] UserInfoForm form)
         {
             if (!ModelState.IsValid) return View(form);
@@ -49,7 +59,7 @@ namespace MVC.Controllers
             var model = new UserInfo();
             form.Update(model);
 
-            // Обробка завантаження фото
+            // Обробка завантаження фото користувача
             model.PhotoPaths = ProcessUploadedPhotos(form.Photos);
             model.AvatarPhoto = model.PhotoPaths.FirstOrDefault();
 
@@ -58,6 +68,7 @@ namespace MVC.Controllers
         }
 
         [HttpGet]
+        // Відображення форми для редагування користувача
         public async Task<IActionResult> Edit(int id)
         {
             var user = await _userService.FindByIdAsync(id);
@@ -65,6 +76,7 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
+        // Обробка запиту на редагування користувача
         public async Task<IActionResult> EditPost([FromForm] UserInfoForm form)
         {
             Console.WriteLine($"ID з форми: {form.Id}");
@@ -86,7 +98,7 @@ namespace MVC.Controllers
 
             form.Update(model);
 
-            // Видалення старих фото та збереження нових
+            // Видалення старих фото та додавання нових
             if (form.Photos != null && form.Photos.Any())
             {
                 DeleteExistingPhotos(model);
@@ -98,6 +110,7 @@ namespace MVC.Controllers
             return RedirectToAction("Index");
         }
 
+        // Відображення підтвердження видалення користувача
         public async Task<IActionResult> Delete(int id)
         {
             var user = await _userService.FindByIdAsync(id);
@@ -105,6 +118,7 @@ namespace MVC.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
+        // Підтвердження та видалення користувача
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = await _userService.FindByIdAsync(id);
@@ -116,6 +130,7 @@ namespace MVC.Controllers
             return RedirectToAction("Index");
         }
 
+        // Встановлення аватару для користувача
         public async Task<IActionResult> SetAvatar(int id, string photo)
         {
             var user = await _userService.FindByIdAsync(id);
@@ -126,18 +141,14 @@ namespace MVC.Controllers
             return RedirectToAction("View", new { id });
         }
 
-        // 🔥 Оптимізовані допоміжні методи
-
-        /// <summary>
-        /// Зберігає завантажені фото та повертає їхні шляхи.
-        /// </summary>
+        // Збереження завантажених фото та повернення їхніх шляхів
         private List<string> ProcessUploadedPhotos(List<IFormFile>? photos)
         {
             var photoPaths = new List<string>();
             if (photos == null || !photos.Any()) return photoPaths;
 
             string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "users");
-            Directory.CreateDirectory(uploadsFolder); // Створює папку, якщо вона не існує
+            Directory.CreateDirectory(uploadsFolder);
 
             foreach (var photo in photos)
             {
@@ -159,9 +170,7 @@ namespace MVC.Controllers
             return photoPaths;
         }
 
-        /// <summary>
-        /// Видаляє існуючі фото користувача.
-        /// </summary>
+        // Видалення старих фото користувача
         private void DeleteExistingPhotos(UserInfo user)
         {
             foreach (var photoPath in user.PhotoPaths)

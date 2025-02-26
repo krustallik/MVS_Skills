@@ -14,6 +14,7 @@ builder.Services.AddDbContext<SiteContext>(options =>
 // Зареєструємо сервіси, які тепер працюватимуть через EF
 builder.Services.AddScoped<UserInfoService>();
 builder.Services.AddScoped<SkillService>();
+builder.Services.AddScoped<HomeService>();
 
 var app = builder.Build();
 

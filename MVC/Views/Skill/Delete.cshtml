@@ -3,12 +3,18 @@
     ViewData["Title"] = "Видалення навички";
     var userId = (int)ViewBag.UserId;
 }
+
 <h1>Видалення навички для користувача з ID = @userId</h1>
+
+<!-- Повідомлення з підтвердженням видалення -->
 <p>Ви впевнені, що хочете видалити навичку "<strong>@Model.Skill.Title</strong>"?</p>
 
+<!-- Форма для підтвердження видалення -->
 <form asp-action="DeleteConfirmed" method="post">
     <input type="hidden" name="skillId" value="@Model.SkillId" />
     <input type="hidden" name="userId" value="@userId" />
+
+    <!-- Кнопки для підтвердження або скасування -->
     <button type="submit" class="btn btn-danger">Видалити</button>
     <a asp-action="Index" asp-route-userId="@userId" class="btn btn-secondary">Відміна</a>
 </form>

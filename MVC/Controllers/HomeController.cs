@@ -1,57 +1,54 @@
-using MVC.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
+using MVC.Models;
+using MVC.Models.Services;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MVC.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly HomeService _homeService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(HomeService homeService)
         {
-            _logger = logger;
+            _homeService = homeService;
         }
 
-        // /Home/Index
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            ViewBag.Professions = await _homeService.GetAllProfessionsAsync();
+            ViewBag.Skills = await _homeService.GetAllSkillsAsync();
             return View();
         }
 
-        // /Home/Privacy
-        public IActionResult Privacy()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Search([FromBody] SearchDto model)
         {
-            return View();
-        }
+            var users = await _homeService.GetAllUsersAsync();
 
-        // /Home/Hello
-        public IActionResult Hello()
-        {
-
-            UserInfo user = new UserInfo
+            // Фільтрація за ім'ям
+            if (!string.IsNullOrEmpty(model.SearchText))
             {
-                Id = 1,
-                Name = "John Doe",
-                Email = "john.doe@example.com",
-                Description = "Software Developer",
-                Birthday = new DateTime(1990, 5, 15),
-                IsActive = true,
-                ExpirienseYears = 5,
-                Salary = 70000,
-            };
+                users = users.Where(u => u.Name.Contains(model.SearchText, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
 
-            return View(user);
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel
+            // Фільтрація за професіями
+            if (model.SelectedProfessions != null && model.SelectedProfessions.Any())
             {
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
-            });
+                users = users.Where(u => model.SelectedProfessions.Contains(u.Profession)).ToList();
+            }
+
+            // Фільтрація за навичками
+            if (model.SelectedSkills != null && model.SelectedSkills.Any())
+            {
+                users = users.Where(u => u.UserSkills.Any(us => model.SelectedSkills.Contains(us.SkillId))).ToList();
+            }
+
+            return PartialView("_UserList", users);
         }
+
     }
 }
-    

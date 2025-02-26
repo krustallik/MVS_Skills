@@ -2,12 +2,16 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MVC.Models;
 using MVC.Models.Services;
+using System.Runtime.CompilerServices;
 
 namespace MVC.Controllers
 {
     public class SkillController : Controller
     {
+        // Поле для доступу до сервісу навичок
         private readonly SkillService _service;
+
+        // Список кольорових опцій для вибору в інтерфейсі
         private readonly List<SelectListItem> _colorOptions = new()
         {
             new() { Value = "#FF5733", Text = "Coral" },
@@ -16,27 +20,33 @@ namespace MVC.Controllers
             new() { Value = "#FF33A8", Text = "Hot Pink" }
         };
 
+        // Конструктор контролера, ініціалізує сервіс
         public SkillController(SkillService service)
         {
             _service = service;
         }
 
+        // Метод для відображення списку навичок користувача
         public async Task<IActionResult> Index(int userId)
         {
-            var skills = await _service.GetAllAsync(userId);
-            ViewBag.UserId = userId;
-            return View(skills);
+            var skills = await _service.GetAllAsync(userId); // Отримання навичок з сервісу
+            ViewBag.UserId = userId; // Передача userId у ViewBag
+            return View(skills); // Повернення представлення з даними
         }
 
-        public IActionResult Create(int userId)
+        // Метод для відображення сторінки створення нової навички
+        public async Task<IActionResult> Create(int userId)
         {
-            // Ініціалізуємо нову сутність UserSkill із новим об'єктом Skill
-            var newUserSkill = new UserSkill { Skill = new Skill() };
-            ViewBag.UserId = userId;
-            ViewBag.ColorOptions = _colorOptions;
-            return View(newUserSkill);
+            var newUserSkill = new UserSkill { Skill = new Skill() }; // Створюємо нову навичку
+            ViewBag.UserId = userId; // Передача userId у ViewBag
+            ViewBag.ColorOptions = _colorOptions; // Передача опцій кольору
+            List<SelectListItem> _skillOptions = await _service.GetAllAsync(); // Очікуємо асинхронний виклик
+            ViewBag.SkillOptions = _skillOptions;
+            return View(newUserSkill); // Повертаємо представлення (без await)
         }
 
+
+        // Метод для обробки POST-запиту на створення навички
         [HttpPost]
         public async Task<IActionResult> Create(int userId, string title, string color, int level, IFormFile? file)
         {
@@ -44,7 +54,7 @@ namespace MVC.Controllers
             {
                 ViewBag.UserId = userId;
                 ViewBag.ColorOptions = _colorOptions;
-                return View();
+                return View(); // Якщо модель невалідна, повертаємо ту ж сторінку
             }
 
             var skill = new Skill
@@ -53,23 +63,26 @@ namespace MVC.Controllers
                 Color = color
             };
 
-            await _service.AddAsync(userId, skill, level, file);
-
-            return RedirectToAction("Index", new { userId });
+            await _service.AddAsync(userId, skill, level, file); // Додаємо навичку через сервіс
+            return RedirectToAction("Index", new { userId }); // Перенаправлення на список навичок
         }
 
-
-
-
+        // Метод для відображення сторінки редагування навички
         public async Task<IActionResult> Edit(int id, int userId)
         {
-            var userSkill = await _service.GetByIdAsync(userId, id);
-            if (userSkill == null) return NotFound();
+            var userSkill = await _service.GetByIdAsync(userId, id); // Отримання навички з сервісу
+            if (userSkill == null) return NotFound(); // Якщо навичка не знайдена - повертаємо 404
+
             ViewBag.UserId = userId;
             ViewBag.ColorOptions = _colorOptions;
-            return View(userSkill);
+
+            List<SelectListItem> _skillOptions = await _service.GetAllAsync(); // Очікуємо асинхронний виклик
+            ViewBag.SkillOptions = _skillOptions;
+
+            return View(userSkill); // Повернення представлення з даними
         }
 
+        // Метод для обробки POST-запиту на оновлення навички
         [HttpPost]
         public async Task<IActionResult> Edit(int id, int userId, string title, string color, int level, IFormFile? file)
         {
@@ -77,31 +90,30 @@ namespace MVC.Controllers
             {
                 ViewBag.UserId = userId;
                 ViewBag.ColorOptions = _colorOptions;
-                return View();
+                return View(); // Якщо модель невалідна, повертаємо ту ж сторінку
             }
 
-            await _service.UpdateAsync(userId, id, title, color, level, file);
-            return RedirectToAction("Index", new { userId });
+            await _service.UpdateAsync(userId, id, title, color, level, file); // Оновлення навички
+            return RedirectToAction("Index", new { userId }); // Перенаправлення на список навичок
         }
 
-
-
+        // Метод для відображення сторінки видалення навички
         [HttpGet]
         public async Task<IActionResult> Delete(int skillId, int userId)
         {
-            var userSkill = await _service.GetByIdAsync(userId, skillId);
-            if (userSkill == null) return NotFound();
+            var userSkill = await _service.GetByIdAsync(userId, skillId); // Отримання навички
+            if (userSkill == null) return NotFound(); // Якщо навичка не знайдена - повертаємо 404
 
             ViewBag.UserId = userId;
-            return View(userSkill);
+            return View(userSkill); // Повернення представлення
         }
 
+        // Метод для підтвердження видалення навички
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int skillId, int userId)
         {
-            await _service.RemoveSkillFromUserAsync(userId, skillId);
-            return RedirectToAction("Index", new { userId });
+            await _service.RemoveSkillFromUserAsync(userId, skillId); // Видалення навички через сервіс
+            return RedirectToAction("Index", new { userId }); // Перенаправлення на список навичок
         }
-
     }
 }

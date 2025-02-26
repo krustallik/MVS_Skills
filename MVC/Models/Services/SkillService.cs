@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,11 +13,13 @@ namespace MVC.Models.Services
     {
         private readonly SiteContext _context;
 
+        // Конструктор сервісу, ініціалізує контекст бази даних
         public SkillService(SiteContext context)
         {
             _context = context;
         }
 
+        // Отримання всіх навичок користувача
         public async Task<List<UserSkill>> GetAllAsync(int userId)
         {
             return await _context.UserSkills
@@ -24,7 +27,20 @@ namespace MVC.Models.Services
                                  .Include(us => us.Skill)
                                  .ToListAsync();
         }
+        //Отримання всіх існуючих навиків з датабази
+        public async Task<List<SelectListItem>> GetAllAsync()
+        {
+            return await _context.Skills
+                .Select(s => new SelectListItem
+                {
+                    Value = s.Title,
+                    Text = s.Title
+                })
+                .ToListAsync();
+        }
 
+
+        // Отримання конкретної навички користувача за ID
         public async Task<UserSkill?> GetByIdAsync(int userId, int skillId)
         {
             return await _context.UserSkills
@@ -32,6 +48,7 @@ namespace MVC.Models.Services
                                  .FirstOrDefaultAsync(us => us.UserInfoId == userId && us.SkillId == skillId);
         }
 
+        // Додавання нової навички користувачу
         public async Task AddAsync(int userId, Skill skill, int level, IFormFile? file = null)
         {
             var existingSkill = await _context.Skills.FirstOrDefaultAsync(s => s.Title == skill.Title);
@@ -47,18 +64,34 @@ namespace MVC.Models.Services
                 existingSkill = skill;
             }
 
-            var userSkill = new UserSkill
-            {
-                UserInfoId = userId,
-                SkillId = existingSkill.Id,
-                Level = level
-            };
+            var userSkillInDatabase = await _context.UserSkills.FirstOrDefaultAsync(us => us.UserInfoId == userId && us.SkillId == existingSkill.Id);
 
-            _context.UserSkills.Add(userSkill);
+            if (userSkillInDatabase == null)
+            {
+                // Створюємо новий зв'язок
+                var userSkill = new UserSkill
+                {
+                    UserInfoId = userId,
+                    SkillId = existingSkill.Id,
+                    Level = level
+                };
+                _context.UserSkills.Add(userSkill);
+            }
+            else
+            {
+                // Оновлюємо дані навички
+                //TODO Адмін міняти може все а користувач лише рівень навички
+                userSkillInDatabase.Level = level;
+                userSkillInDatabase.Skill.Color = skill.Color;
+                userSkillInDatabase.Skill.LogoPath = SaveImage(file,userId);
+                _context.UserSkills.Update(userSkillInDatabase);
+            }
+
             await _context.SaveChangesAsync();
         }
 
 
+        // Оновлення інформації про навичку
         public async Task UpdateAsync(int userId, int skillId, string newTitle, string newColor, int newLevel, IFormFile? file = null)
         {
             var userSkill = await GetByIdAsync(userId, skillId);
@@ -81,7 +114,7 @@ namespace MVC.Models.Services
             }
         }
 
-
+        // Видалення навички у конкретного користувача
         public async Task RemoveSkillFromUserAsync(int userId, int skillId)
         {
             var userSkill = await _context.UserSkills
@@ -93,6 +126,7 @@ namespace MVC.Models.Services
             }
         }
 
+        // Видалення навички з бази даних
         public async Task DeleteAsync(int skillId)
         {
             var skill = await _context.Skills.Include(s => s.UserSkills)
@@ -109,6 +143,7 @@ namespace MVC.Models.Services
             }
         }
 
+        // Збереження зображення навички та повернення його шляху
         private string SaveImage(IFormFile file, int userId)
         {
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
@@ -133,6 +168,7 @@ namespace MVC.Models.Services
             return $"/images/skills/{uniqueFileName}";
         }
 
+        // Видалення зображення з файлової системи
         private void DeleteImage(string? filePath)
         {
             if (!string.IsNullOrEmpty(filePath))
