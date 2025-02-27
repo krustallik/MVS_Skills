@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace MVC.Models
 {
-    public class SiteContext : DbContext
+    public class SiteContext : IdentityDbContext<User,IdentityRole<int>, int>
     {
         public DbSet<UserInfo> UserInfos { get; set; }
         public DbSet<Skill> Skills { get; set; }

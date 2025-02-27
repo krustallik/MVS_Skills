@@ -1,0 +1,42 @@
+﻿@using MVC.Areas.Auth.Models.Forms
+@model LoginForm
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h4>@ViewData["Title"]</h4>
+    </div>
+
+    <!-- Приклад форми з використанням TagHelper-ів -->
+    <form enctype="multipart/form-data" asp-controller="Skill" asp-action="Act" method="post">
+        <div class="card-body">
+            <div class="mb-3">
+                <label asp-for="Login" class="form-label"></label>
+                <input asp-for="Login" class="form-control" type="text" />
+                <span asp-validation-for="Login" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input asp-for="Password" class="form-control" type="password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <button class="btn btn-primary" type="submit">login</button>
+        </div>
+    </form>
+
+    <div class="mt-2">
+        <a asp-area="Auth"
+           asp-controller="Account"
+           asp-action="Register"
+           class="btn btn-outline-success">Register</a>
+            Return
+        </a>
+    </div>
+</div>

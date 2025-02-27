@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MVC.Models;
 using MVC.Models.Services;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace MVC.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly HomeService _homeService;
