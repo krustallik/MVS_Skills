@@ -52,8 +52,24 @@
                                 Account
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="authDropdown">
-                                <li><a class="dropdown-item" asp-area="Auth" asp-controller="Account" asp-action="Login">Login</a></li>
-                                <li><a class="dropdown-item" asp-area="Auth" asp-controller="Account" asp-action="Register">Register</a></li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-area="Auth"
+                                       asp-controller="Account"
+                                       asp-action="Login"
+                                       asp-route-returnUrl="/">
+                                        Login
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-area="Auth"
+                                       asp-controller="Account"
+                                       asp-action="Register"
+                                       asp-route-returnUrl="/">
+                                        Register
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                     }

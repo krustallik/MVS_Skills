@@ -2,7 +2,7 @@
 @model LoginForm
 
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Registration";
     var returnUrl = Context.Request.Query["ReturnUrl"];
     if (string.IsNullOrEmpty(returnUrl))
     {
@@ -19,7 +19,7 @@
     <form enctype="multipart/form-data"
           asp-area="Auth"
           asp-controller="Account"
-          asp-action="Login">
+          asp-action="Register">
         <input type="hidden" name="ReturnUrl" value="@returnUrl" />
 
         <div class="card-body">
@@ -37,13 +37,13 @@
         </div>
 
         <div class="card-footer">
-            <button class="btn btn-primary" type="submit">Login</button>
+            <button class="btn btn-primary" type="submit">Register</button>
 
             <a asp-area="Auth"
                asp-controller="Account"
-               asp-action="Register"
+               asp-action="Login"
                asp-route-ReturnUrl="@returnUrl"
-               class="btn btn-outline-success">Register</a>
+               class="btn btn-outline-success">Login</a>
         </div>
     </form>
 </div>
