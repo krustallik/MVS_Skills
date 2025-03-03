@@ -42,6 +42,12 @@ public class AccountController(
         identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
         identity.AddClaim(new Claim(ClaimTypes.Email, user.Email));
 
+        var roles = await userManager.GetRolesAsync(user);
+        foreach (var role in roles)
+        {
+            identity.AddClaim(new Claim(ClaimTypes.Role, role));
+        }
+
         var principal = new ClaimsPrincipal(identity);
         await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal);
 
@@ -98,9 +104,12 @@ public class AccountController(
             return View(form);
         }
 
+        await userManager.AddToRoleAsync(user, "User");
+
         var identity = new ClaimsIdentity(IdentityConstants.ApplicationScheme);
         identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
         identity.AddClaim(new Claim(ClaimTypes.Email, user.Email));
+        identity.AddClaim(new Claim(ClaimTypes.Role, "User"));
 
         var principal = new ClaimsPrincipal(identity);
 

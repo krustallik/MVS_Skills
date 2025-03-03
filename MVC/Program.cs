@@ -40,6 +40,7 @@ builder.Services.AddScoped<UserInfoService>();
 builder.Services.AddScoped<SkillService>();
 builder.Services.AddScoped<HomeService>();
 builder.Services.AddScoped<ProfileService>();
+builder.Services.AddScoped<AdminService>();
 
 var app = builder.Build();
 

@@ -27,7 +27,7 @@ namespace MVC.Areas.Auth.Models.Services
                 {
                     DeleteImage(user.ImagePath);
                 }
-                string filePath = SaveImage(imageFile, user.Id);
+                string filePath = await SaveImage(imageFile, user.Id);
                 user.ImagePath = filePath;
             }
 
@@ -35,7 +35,7 @@ namespace MVC.Areas.Auth.Models.Services
             await _context.SaveChangesAsync();
         }
 
-        private string SaveImage(IFormFile file, int userId)
+        public async Task<string> SaveImage(IFormFile file, int userId)
         {
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
@@ -53,13 +53,14 @@ namespace MVC.Areas.Auth.Models.Services
 
             using (var fileStream = new FileStream(filePath, FileMode.Create))
             {
-                file.CopyTo(fileStream);
+                await file.CopyToAsync(fileStream);
             }
 
             return $"/images/avatars/{uniqueFileName}";
         }
 
-        private void DeleteImage(string imagePath)
+
+        public void DeleteImage(string imagePath)
         {
             if (!string.IsNullOrEmpty(imagePath))
             {

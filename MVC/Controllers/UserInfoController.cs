@@ -6,6 +6,7 @@ using MVC.Models.Services;
 
 namespace MVC.Controllers
 {
+    [Authorize(Roles = "Admin,User")]
     public class UserInfoController : Controller
     {
         // Логер для запису інформації про роботу контролера
@@ -48,12 +49,10 @@ namespace MVC.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         // Відображення форми для створення нового користувача
         public IActionResult Create() => View(new UserInfoForm(new UserInfo()));
 
         [HttpPost]
-        [Authorize]
         // Обробка запиту на створення нового користувача
         public async Task<IActionResult> Create([FromForm] UserInfoForm form)
         {
@@ -71,7 +70,6 @@ namespace MVC.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         // Відображення форми для редагування користувача
         public async Task<IActionResult> Edit(int id)
         {
@@ -80,7 +78,6 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
-        [Authorize]
         // Обробка запиту на редагування користувача
         public async Task<IActionResult> EditPost([FromForm] UserInfoForm form)
         {
@@ -116,7 +113,6 @@ namespace MVC.Controllers
         }
 
         // Відображення підтвердження видалення користувача
-        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
             var user = await _userService.FindByIdAsync(id);
@@ -124,7 +120,6 @@ namespace MVC.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
-        [Authorize]
         // Підтвердження та видалення користувача
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
