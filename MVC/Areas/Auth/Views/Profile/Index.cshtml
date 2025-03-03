@@ -1,0 +1,54 @@
+﻿@model User
+@{
+    ViewData["Title"] = "Profile";
+}
+<div>
+    <h1 class="display-4">@ViewData["Title"]</h1>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header"></div>
+                <div class="card-body">
+
+                    @if (Model.ImagePath != null)
+                    {
+                        <div class="avatar" style="background-image: url(@Model.ImagePath)"></div>
+                    }
+
+
+                    <div><h5>@Model.FullName</h5></div>
+                    <div>
+                        <div class="small text-muted">Email</div>
+                        @Model.Email
+                    </div>
+                    <div>
+                        <div class="small text-muted">Phone</div>
+                        @Model.PhoneNumber
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a asp-area="Auth"
+                       asp-controller="Profile"
+                       asp-action="Edit"
+                       class="btn btn-outline-success">Edit</a>
+
+                    <a asp-area=""
+                       asp-controller="Home"
+                       asp-action="Index"
+                       class="btn btn-outline-primary">Return</a>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header"></div>
+                <div class=- кнопка змініти пароль
+                     - кнолка видалити акаунт (зовсім)
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

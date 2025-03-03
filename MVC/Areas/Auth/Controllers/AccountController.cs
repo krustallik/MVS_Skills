@@ -19,7 +19,6 @@ public class AccountController(
     }
 
     [HttpPost]
-    [HttpPost]
     public async Task<IActionResult> Login([FromForm] LoginForm form, string returnUrl)
     {
         // Якщо returnUrl порожній, встановлюємо значення за замовчуванням

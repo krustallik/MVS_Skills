@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -34,9 +35,17 @@
                     {
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                @User.Identity.Name
+                                @User.Claims.First(x => x.Type ==ClaimTypes.Email).Value
                             </a>
                             <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-area="Auth"
+                                       asp-controller="Profile"
+                                       asp-action="Index">
+                                        Profile
+                                    </a>
+                                </li>
                                 <li>
                                     <form method="post" asp-area="Auth" asp-controller="Account" asp-action="Logout">
                                         <button type="submit" class="dropdown-item">Logout</button>
