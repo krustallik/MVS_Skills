@@ -1,16 +1,15 @@
-﻿@model ProfileForm
+﻿@model MVC.Areas.Auth.Models.Forms.ProfileForm
 @{
-    ViewData["Title"] = "Edit profile";
+    ViewData["Title"] = "Edit Profile";
 }
 <div>
     <h1 class="display-4">@ViewData["Title"]</h1>
 
     <div class="row">
-        <div class="col-md-4">
-            <form method="post" enctype="multipart/form-data"
-                  asp-area="Auth" asp-controller="Profile" asp-action="Edit">
+        <div class="col-md-6">
+            <form method="post" enctype="multipart/form-data" asp-area="Auth" asp-controller="Profile" asp-action="Edit">
                 <div class="card">
-                    <div class="card-header"></div>
+                    <div class="card-header">Edit Profile Information</div>
                     <div class="card-body">
                         <div class="mb-3">
                             @Html.LabelFor(x => x.FullName, new { @class = "form-label" })
@@ -24,18 +23,19 @@
                         </div>
                         <div class="mb-3">
                             @Html.LabelFor(x => x.Image, new { @class = "form-label" })
-                            @Html.TextBoxFor(x => x.Image, new { @class = "form-control", type = "file", accept = "*.jpg,*.jpeg,*.png" })
-                            @Html.ValidationMessageFor(x => x.Image, null, new { @class = "text-danger" })
+                            <input type="file" name="Image" class="form-control" accept=".jpg,.jpeg,.png,.gif" />
                         </div>
+                        @if (!string.IsNullOrEmpty(Model.ImagePath))
+                        {
+                            <div class="mb-3">
+                                <img src="@Model.ImagePath" alt="Current Avatar" style="max-width: 150px;" />
+                            </div>
+                        }
                     </div>
-
-                </div>
-                <div class="card-footer">
-                    <button class="btn btn-primary" type="submit">Save</button>
-                    <a asp-area="Auth"
-                       asp-controller="Profile"
-                       asp-action="Index"
-                       class="btn btn-outline-success">Return</a>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">Save</button>
+                        <a asp-area="Auth" asp-controller="Profile" asp-action="Index" class="btn btn-outline-success">Return</a>
+                    </div>
                 </div>
             </form>
         </div>

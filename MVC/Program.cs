@@ -2,6 +2,7 @@ using MVC.Models;
 using MVC.Models.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using MVC.Areas.Auth.Models.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,7 @@ builder.Services.ConfigureApplicationCookie(options => //налаштування редіректів
 builder.Services.AddScoped<UserInfoService>();
 builder.Services.AddScoped<SkillService>();
 builder.Services.AddScoped<HomeService>();
+builder.Services.AddScoped<ProfileService>();
 
 var app = builder.Build();
 

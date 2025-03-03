@@ -1,8 +1,14 @@
-﻿namespace MVC.Areas.Auth.Models.Forms;
+﻿using Microsoft.AspNetCore.Http;
 
-public class ProfileForm
+namespace MVC.Areas.Auth.Models.Forms
 {
-    public string ImagePath { get; set; }
-    public string? FullName { get; set; }
-    public string? Phone { get; set; }
+    public class ProfileForm
+    {
+        public string? FullName { get; set; }
+        public string? Phone { get; set; }
+        // Поле для завантаження аватарки
+        public IFormFile? Image { get; set; }
+        // Поточний шлях до зображення (для відображення)
+        public string? ImagePath { get; set; }
+    }
 }

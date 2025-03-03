@@ -1,0 +1,13 @@
+﻿@{
+    ViewData["Title"] = "Delete Account";
+}
+<div>
+    <h1 class="display-4">@ViewData["Title"]</h1>
+    <div class="alert alert-warning">
+        Ви впевнені, що хочете видалити свій акаунт? Ця дія незворотня.
+    </div>
+    <form method="post" asp-area="Auth" asp-controller="Profile" asp-action="DeleteAccount">
+        <button type="submit" class="btn btn-danger">Видалити акаунт</button>
+        <a asp-area="Auth" asp-controller="Profile" asp-action="Index" class="btn btn-secondary">Скасувати</a>
+    </form>
+</div>
