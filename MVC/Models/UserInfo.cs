@@ -14,5 +14,9 @@
         public virtual ICollection<UserSkill> UserSkills { get; set; } = new List<UserSkill>();
         public List<string> PhotoPaths { get; set; } = new List<string>();
         public string? AvatarPhoto { get; set; }
+
+        // Додано: зв'язок з користувачем, який створив даний запис
+        public int OwnerId { get; set; }
+        public virtual User Owner { get; set; } = null!;
     }
 }

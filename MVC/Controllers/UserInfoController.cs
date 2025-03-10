@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MVC.Models;
 using MVC.Models.Forms;
 using MVC.Models.Services;
+using System.Security.Claims;
 
 namespace MVC.Controllers
 {
@@ -20,26 +22,46 @@ namespace MVC.Controllers
 
         // Оточення хоста для роботи з файлами
         private readonly IWebHostEnvironment _env;
+        private readonly SiteContext _siteContext;
 
         // Конструктор контролера, ініціалізує залежності
         public UserInfoController(
             ILogger<UserInfoController> logger,
             UserInfoService userService,
             SkillService skillService,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            SiteContext context)
         {
             _logger = logger;
             _userService = userService;
             _skillService = skillService;
             _env = env;
+            _siteContext = context;
         }
 
         // Відображення списку всіх користувачів
         public async Task<IActionResult> Index()
         {
-            var users = await _userService.GetAllAsync();
-            return View(users);
+            List<UserInfo> userInfos;
+            if (User.IsInRole("Admin"))
+            {
+                // Адміністратор бачить усі записи
+                userInfos = await _siteContext.UserInfos
+                                          .Include(ui => ui.Owner)
+                                          .ToListAsync();
+            }
+            else
+            {
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                // Звичайний користувач бачить лише свої записи
+                userInfos = await _siteContext.UserInfos
+                                          .Where(ui => ui.OwnerId == currentUserId)
+                                          .ToListAsync();
+            }
+
+            return View(userInfos);
         }
+
 
         // Перегляд інформації про конкретного користувача
         public async Task<IActionResult> View(int id)
@@ -58,12 +80,15 @@ namespace MVC.Controllers
         {
             if (!ModelState.IsValid) return View(form);
 
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
             var model = new UserInfo();
             form.Update(model);
 
             // Обробка завантаження фото користувача
             model.PhotoPaths = ProcessUploadedPhotos(form.Photos);
             model.AvatarPhoto = model.PhotoPaths.FirstOrDefault();
+            model.OwnerId = currentUserId;
 
             await _userService.AddAsync(model);
             return RedirectToAction("Index");

@@ -7,5 +7,6 @@ namespace MVC.Models
     {
         public string? FullName { get; set; }
         public string? ImagePath { get; set; }
+        public ICollection<UserInfo>? UserInfos { get; set; }
     }
 }
