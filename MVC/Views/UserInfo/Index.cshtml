@@ -12,10 +12,12 @@
                 <th>Name</th>
                 <th>Email</th>
                 <th>Profession</th>
-                <th>Owner Email</th>
-                <td>Owner FullName</td>
-
-                <th></th>
+                @if (User.IsInRole("Admin"))
+                {
+                    <th>Owner Email</th>
+                    <th>Owner FullName</th>
+                }
+                <th>Avarage Rating</th>
             </tr>
         </thead>
         <tbody>
@@ -26,8 +28,18 @@
                     <td>@item.Name</td>
                     <td>@item.Email</td>
                     <td>@item.Profession</td>
-                    <td>@item.Owner.Email</td>
-                    <td>@item.Owner.FullName</td>
+                    @if (User.IsInRole("Admin")){
+                        <td>@item.Owner.Email</td>
+                        <td>@item.Owner.FullName</td>
+                    }
+
+                    <td>
+                        @if (item.AverageRating.HasValue)
+                        {
+                            @item.AverageRating
+                        }
+                    </td>
+
                     <td>
                         <a asp-controller="UserInfo" asp-action="View" asp-route-id="@item.Id" class="btn btn-primary">View</a>
                         <a asp-controller="UserInfo" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
@@ -37,6 +49,7 @@
                             </button>
                         </form>
                     </td>
+                    
                 </tr>
             }
         </tbody>

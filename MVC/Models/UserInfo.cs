@@ -1,4 +1,6 @@
-﻿namespace MVC.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace MVC.Models
 {
     public class UserInfo
     {
@@ -18,5 +20,10 @@
         // Додано: зв'язок з користувачем, який створив даний запис
         public int OwnerId { get; set; }
         public virtual User Owner { get; set; } = null!;
+        public ICollection<UserRating> UserRatings { get; set; } = new List<UserRating>();
+        [NotMapped]
+        public decimal? AverageRating => UserRatings.Any() ? (decimal?)UserRatings.Average(r => r.Rating) : null;
+
+
     }
 }

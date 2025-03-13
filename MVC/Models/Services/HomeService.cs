@@ -21,6 +21,8 @@ namespace MVC.Models.Services
             return await _context.UserInfos
                                  .Include(u => u.UserSkills)
                                  .ThenInclude(us => us.Skill)
+                                 .Include(u => u.Owner)
+                                 .Include(u => u.UserRatings)
                                  .ToListAsync();
         }
 

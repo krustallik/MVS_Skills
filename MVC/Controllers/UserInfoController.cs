@@ -48,6 +48,7 @@ namespace MVC.Controllers
                 // Адміністратор бачить усі записи
                 userInfos = await _siteContext.UserInfos
                                           .Include(ui => ui.Owner)
+                                          .Include(ui => ui.UserRatings)
                                           .ToListAsync();
             }
             else
@@ -211,5 +212,52 @@ namespace MVC.Controllers
             user.PhotoPaths.Clear();
             user.AvatarPhoto = null;
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Rate(int userInfoId, int rating)
+        {
+            // Отримати поточного користувача з Claims
+            int currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+
+            // Завантажити об'єкт UserInfo з бази даних, включаючи оцінки (якщо потрібно)
+            var userInfo = await _siteContext.UserInfos
+                .Include(ui => ui.UserRatings)
+                .FirstOrDefaultAsync(ui => ui.Id == userInfoId);
+
+            if (userInfo == null)
+            {
+                return NotFound();
+            }
+
+            // Заборонити голосувати самому собі
+            if (userInfo.OwnerId == currentUserId)
+            {
+                // Можна повернути повідомлення про помилку або редірект з повідомленням
+                ModelState.AddModelError("", "Неможливо оцінити власний профіль.");
+                return RedirectToAction("View", new { id = userInfoId });
+            }
+
+            // Перевірка чи користувач вже голосував
+            if (userInfo.UserRatings.Any(r => r.RaterId == currentUserId))
+            {
+                ModelState.AddModelError("", "Ви вже голосували за цього користувача.");
+                return RedirectToAction("View", new { id = userInfoId });
+            }
+
+            // Створюємо новий запис оцінки
+            var userRating = new UserRating
+            {
+                UserInfoId = userInfoId,
+                RaterId = currentUserId,
+                Rating = rating
+            };
+
+            _siteContext.UserRatings.Add(userRating);
+            await _siteContext.SaveChangesAsync();
+
+            return RedirectToAction("Index", "Home");
+
+        }
+
     }
 }

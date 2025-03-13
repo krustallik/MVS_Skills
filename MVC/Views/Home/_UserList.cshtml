@@ -8,6 +8,7 @@
                 <th>Ім'я</th>
                 <th>Професія</th>
                 <th>Навички</th>
+                <th>оцінка</th>
             </tr>
         </thead>
         <tbody>
@@ -19,6 +20,36 @@
                     <td>
                         @(user.UserSkills.Any() ? string.Join(", ", user.UserSkills.Select(us => us.Skill.Title)) : "Немає навичок")
                     </td>
+                    @{
+                        // Припустимо, що у View є змінна currentUserId, яку отримали з Claims
+                        int currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+                        var userRating = user.UserRatings.FirstOrDefault(r => r.RaterId == currentUserId);
+                    }
+                    @if (user.Owner.Id != currentUserId) // не дозволяти голосувати самому собі
+                    {
+                        if (userRating != null)
+                        {
+                            <td>ваша оцінка: @userRating.Rating</td>
+                        }
+                        else
+                        {
+                            <td>
+                            <!-- Можна зробити форму для голосування, наприклад, з dropdown або кнопками -->
+                            <form asp-controller="UserInfo" asp-action="Rate" method="post">
+                                <input type="hidden" name="userInfoId" value="@user.Id" />
+                                <select name="rating">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary">Оцінити</button>
+                            </form>
+                            </td>
+                        }
+                    }
+
                 </tr>
             }
         </tbody>
