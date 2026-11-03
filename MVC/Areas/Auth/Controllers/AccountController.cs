@@ -19,6 +19,7 @@ public class AccountController(
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login([FromForm] LoginForm form, string returnUrl)
     {
         if (!Url.IsLocalUrl(returnUrl))
@@ -53,6 +54,7 @@ public class AccountController(
 
     [HttpPost]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
         await signInManager.SignOutAsync();
@@ -60,6 +62,7 @@ public class AccountController(
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register([FromForm] RegisterForm form, string returnUrl)
     {
         if (!Url.IsLocalUrl(returnUrl))
