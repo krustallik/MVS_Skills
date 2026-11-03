@@ -21,8 +21,7 @@ public class AccountController(
     [HttpPost]
     public async Task<IActionResult> Login([FromForm] LoginForm form, string returnUrl)
     {
-        // Якщо returnUrl порожній, встановлюємо значення за замовчуванням
-        if (string.IsNullOrEmpty(returnUrl))
+        if (!Url.IsLocalUrl(returnUrl))
         {
             returnUrl = Url.Content("~/");
         }
@@ -42,7 +41,7 @@ public class AccountController(
             return View(form);
         }
 
-        return Redirect(returnUrl);
+        return LocalRedirect(returnUrl);
     }
 
 
@@ -63,8 +62,7 @@ public class AccountController(
     [HttpPost]
     public async Task<IActionResult> Register([FromForm] RegisterForm form, string returnUrl)
     {
-        // Якщо returnUrl порожній, встановлюємо значення за замовчуванням
-        if (string.IsNullOrEmpty(returnUrl))
+        if (!Url.IsLocalUrl(returnUrl))
         {
             returnUrl = Url.Content("~/");
         }
@@ -105,6 +103,6 @@ public class AccountController(
 
         await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal);
 
-        return Redirect(returnUrl);
+        return LocalRedirect(returnUrl);
     }
 }
