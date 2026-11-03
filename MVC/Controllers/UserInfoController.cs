@@ -237,6 +237,11 @@ namespace MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rate(int userInfoId, int rating)
         {
+            if (rating is < 1 or > 5)
+            {
+                return BadRequest();
+            }
+
             // Отримати поточного користувача з Claims
             int currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
