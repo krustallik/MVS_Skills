@@ -71,6 +71,21 @@ namespace MVC.Controllers
             return user == null ? NotFound() : View(user);
         }
 
+        private Task<UserInfo?> FindManageableUserInfoAsync(int id)
+        {
+            if (User.IsInRole("Admin"))
+            {
+                return _userService.FindByIdAsync(id);
+            }
+
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var ownerId))
+            {
+                return Task.FromResult<UserInfo?>(null);
+            }
+
+            return _userService.FindByIdForOwnerAsync(id, ownerId);
+        }
+
         [HttpGet]
         // Відображення форми для створення нового користувача
         public IActionResult Create() => View(new UserInfoForm(new UserInfo()));
@@ -99,7 +114,7 @@ namespace MVC.Controllers
         // Відображення форми для редагування користувача
         public async Task<IActionResult> Edit(int id)
         {
-            var user = await _userService.FindByIdAsync(id);
+            var user = await FindManageableUserInfoAsync(id);
             return user == null ? NotFound() : View(new UserInfoForm(user));
         }
 
@@ -121,7 +136,7 @@ namespace MVC.Controllers
                 return View("Edit", form);
             }
 
-            var model = await _userService.FindByIdAsync(form.Id);
+            var model = await FindManageableUserInfoAsync(form.Id);
             if (model == null) return NotFound();
 
             form.Update(model);
@@ -141,7 +156,7 @@ namespace MVC.Controllers
         // Відображення підтвердження видалення користувача
         public async Task<IActionResult> Delete(int id)
         {
-            var user = await _userService.FindByIdAsync(id);
+            var user = await FindManageableUserInfoAsync(id);
             return user == null ? NotFound() : View(user);
         }
 
@@ -149,11 +164,11 @@ namespace MVC.Controllers
         // Підтвердження та видалення користувача
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var user = await _userService.FindByIdAsync(id);
+            var user = await FindManageableUserInfoAsync(id);
             if (user == null) return NotFound();
 
             DeleteExistingPhotos(user);
-            await _userService.DeleteByIdAsync(id);
+            await _userService.DeleteAsync(user);
 
             return RedirectToAction("Index");
         }
@@ -161,7 +176,7 @@ namespace MVC.Controllers
         // Встановлення аватару для користувача
         public async Task<IActionResult> SetAvatar(int id, string photo)
         {
-            var user = await _userService.FindByIdAsync(id);
+            var user = await FindManageableUserInfoAsync(id);
             if (user == null || !user.PhotoPaths.Contains(photo)) return NotFound();
 
             user.AvatarPhoto = photo;
