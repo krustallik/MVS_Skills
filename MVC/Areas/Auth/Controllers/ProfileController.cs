@@ -55,6 +55,7 @@ namespace MVC.Areas.Auth.Controllers
 
         // POST: Редагування профіля
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ProfileForm model)
         {
             if (!ModelState.IsValid)
@@ -78,6 +79,7 @@ namespace MVC.Areas.Auth.Controllers
 
         // POST: Зміна паролю
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(ChangePasswordForm model)
         {
             if (!ModelState.IsValid)
@@ -115,6 +117,7 @@ namespace MVC.Areas.Auth.Controllers
 
         // POST: Видалення акаунту
         [HttpPost, ActionName("DeleteAccount")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteAccountConfirmed()
         {
             var id = int.Parse(User.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value);

@@ -50,6 +50,7 @@ namespace MVC.Controllers
 
         // Метод для обробки POST-запиту на створення навички
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(int userId, string title, string color, int level, IFormFile? file)
         {
             if (!ModelState.IsValid)
@@ -86,6 +87,7 @@ namespace MVC.Controllers
 
         // Метод для обробки POST-запиту на оновлення навички
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, int userId, string title, string color, int level, IFormFile? file)
         {
             if (!ModelState.IsValid)
@@ -112,6 +114,7 @@ namespace MVC.Controllers
 
         // Метод для підтвердження видалення навички
         [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int skillId, int userId)
         {
             await _service.RemoveSkillFromUserAsync(userId, skillId); // Видалення навички через сервіс

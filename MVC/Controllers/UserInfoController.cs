@@ -91,6 +91,7 @@ namespace MVC.Controllers
         public IActionResult Create() => View(new UserInfoForm(new UserInfo()));
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         // Обробка запиту на створення нового користувача
         public async Task<IActionResult> Create([FromForm] UserInfoForm form)
         {
@@ -119,6 +120,7 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         // Обробка запиту на редагування користувача
         public async Task<IActionResult> EditPost([FromForm] UserInfoForm form)
         {
@@ -161,6 +163,7 @@ namespace MVC.Controllers
         }
 
         [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         // Підтвердження та видалення користувача
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -174,6 +177,8 @@ namespace MVC.Controllers
         }
 
         // Встановлення аватару для користувача
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SetAvatar(int id, string photo)
         {
             var user = await FindManageableUserInfoAsync(id);
@@ -229,6 +234,7 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rate(int userInfoId, int rating)
         {
             // Отримати поточного користувача з Claims

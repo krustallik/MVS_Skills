@@ -37,6 +37,7 @@ public class AdminController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EditUserForm editUserForm)
     {
         if (!ModelState.IsValid)
