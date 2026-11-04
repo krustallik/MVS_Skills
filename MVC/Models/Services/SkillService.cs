@@ -11,6 +11,8 @@ namespace MVC.Models.Services
 {
     public class SkillService
     {
+        public const long MaxLogoBytes = 5 * 1024 * 1024;
+
         private readonly SiteContext _context;
 
         // Конструктор сервісу, ініціалізує контекст бази даних
@@ -83,7 +85,14 @@ namespace MVC.Models.Services
                 //TODO Адмін міняти може все а користувач лише рівень навички
                 userSkillInDatabase.Level = level;
                 userSkillInDatabase.Skill.Color = skill.Color;
-                userSkillInDatabase.Skill.LogoPath = SaveImage(file,userId);
+                if (file != null && file.Length > 0)
+                {
+                    if (!string.IsNullOrEmpty(userSkillInDatabase.Skill.LogoPath))
+                    {
+                        DeleteImage(userSkillInDatabase.Skill.LogoPath);
+                    }
+                    userSkillInDatabase.Skill.LogoPath = SaveImage(file, userId);
+                }
                 _context.UserSkills.Update(userSkillInDatabase);
             }
 
@@ -146,6 +155,11 @@ namespace MVC.Models.Services
         // Збереження зображення навички та повернення його шляху
         private string SaveImage(IFormFile file, int userId)
         {
+            if (file.Length <= 0 || file.Length > MaxLogoBytes)
+            {
+                throw new InvalidOperationException("Skill logo files must be 5 MB or smaller.");
+            }
+
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
