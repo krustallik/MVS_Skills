@@ -81,4 +81,4 @@ There is no committed automated test project. These runtime checks are not a ful
 - This is an academic prototype; production deployment and external hosting have not been verified.
 - The application uses local SQLite persistence and local image files. A deployment needs an explicit plan for database and upload storage, backups, access control, and operations.
 - Profile-gallery and skill-logo uploads have size and signature checks but are not fully decoded. Account-avatar uploads currently check only the filename extension and lack an application-level size limit or storage quota; account deletion also leaves uploaded avatar files behind. Address this before exposing the prototype to untrusted users.
-- The existing public Git history still needs a data-provenance review. This source update does not remove or rewrite historical records.
+- The owner confirms that historical user, profile, SQLite, and JSON records were randomly generated test data with no real personal information. Older revisions remain in Git history; the current index excludes runtime databases, profile JSON, and uploaded images. Git history was not rewritten.
