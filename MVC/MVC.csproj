@@ -18,6 +18,11 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+    <!-- Keep vulnerable transitive tooling dependencies on patched compatible releases. -->
+    <PackageReference Include="Microsoft.Build" Version="17.8.43" PrivateAssets="all" />
+    <PackageReference Include="NuGet.Packaging" Version="6.11.2" PrivateAssets="all" />
+    <PackageReference Include="NuGet.Protocol" Version="6.11.2" PrivateAssets="all" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.14" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
