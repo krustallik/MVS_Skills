@@ -12,6 +12,14 @@
             </tr>
         </thead>
         <tbody>
+            @{
+                int? currentUserId = int.TryParse(
+                    User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+                    out var parsedUserId)
+                    ? parsedUserId
+                    : null;
+            }
+
             @foreach (var user in Model)
             {
                 <tr>
@@ -21,19 +29,23 @@
                         @(user.UserSkills.Any() ? string.Join(", ", user.UserSkills.Select(us => us.Skill.Title)) : "Немає навичок")
                     </td>
                     @{
-                        // Припустимо, що у View є змінна currentUserId, яку отримали з Claims
-                        int currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
-                        var userRating = user.UserRatings.FirstOrDefault(r => r.RaterId == currentUserId);
+                        var userRating = currentUserId.HasValue
+                            ? user.UserRatings.FirstOrDefault(r => r.RaterId == currentUserId.Value)
+                            : null;
                     }
-                    @if (user.Owner.Id != currentUserId) // не дозволяти голосувати самому собі
+                    <td>
+                    @if (!currentUserId.HasValue)
+                    {
+                        <span>Увійдіть, щоб оцінити</span>
+                    }
+                    else if (user.OwnerId != currentUserId.Value)
                     {
                         if (userRating != null)
                         {
-                            <td>ваша оцінка: @userRating.Rating</td>
+                            <span>Ваша оцінка: @userRating.Rating</span>
                         }
                         else
                         {
-                            <td>
                             <!-- Можна зробити форму для голосування, наприклад, з dropdown або кнопками -->
                             <form asp-controller="UserInfo" asp-action="Rate" method="post">
                                 <input type="hidden" name="userInfoId" value="@user.Id" />
@@ -46,9 +58,13 @@
                                 </select>
                                 <button type="submit" class="btn btn-primary">Оцінити</button>
                             </form>
-                            </td>
                         }
                     }
+                    else
+                    {
+                        <span>Ваш профіль</span>
+                    }
+                    </td>
 
                 </tr>
             }

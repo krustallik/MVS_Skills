@@ -11,6 +11,10 @@ namespace MVC.Controllers
     [Authorize(Roles = "Admin,User")]
     public class UserInfoController : Controller
     {
+        private const int MaxPhotosPerProfile = 5;
+        private const long MaxPhotoSizeBytes = 5 * 1024 * 1024;
+        private const long MaxPhotoRequestBytes = 28_000_000;
+
         // Логер для запису інформації про роботу контролера
         private readonly ILogger<UserInfoController> _logger;
 
@@ -71,15 +75,40 @@ namespace MVC.Controllers
             return user == null ? NotFound() : View(user);
         }
 
+        private Task<UserInfo?> FindManageableUserInfoAsync(int id)
+        {
+            if (User.IsInRole("Admin"))
+            {
+                return _userService.FindByIdAsync(id);
+            }
+
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var ownerId))
+            {
+                return Task.FromResult<UserInfo?>(null);
+            }
+
+            return _userService.FindByIdForOwnerAsync(id, ownerId);
+        }
+
         [HttpGet]
         // Відображення форми для створення нового користувача
         public IActionResult Create() => View(new UserInfoForm(new UserInfo()));
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         // Обробка запиту на створення нового користувача
+        [RequestSizeLimit(MaxPhotoRequestBytes)]
+        [RequestFormLimits(MultipartBodyLengthLimit = MaxPhotoRequestBytes)]
         public async Task<IActionResult> Create([FromForm] UserInfoForm form)
         {
             if (!ModelState.IsValid) return View(form);
+
+            var photoUploadError = ValidatePhotoUploads(form.Photos);
+            if (photoUploadError != null)
+            {
+                ModelState.AddModelError(nameof(form.Photos), photoUploadError);
+                return View(form);
+            }
 
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
@@ -99,12 +128,15 @@ namespace MVC.Controllers
         // Відображення форми для редагування користувача
         public async Task<IActionResult> Edit(int id)
         {
-            var user = await _userService.FindByIdAsync(id);
+            var user = await FindManageableUserInfoAsync(id);
             return user == null ? NotFound() : View(new UserInfoForm(user));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         // Обробка запиту на редагування користувача
+        [RequestSizeLimit(MaxPhotoRequestBytes)]
+        [RequestFormLimits(MultipartBodyLengthLimit = MaxPhotoRequestBytes)]
         public async Task<IActionResult> EditPost([FromForm] UserInfoForm form)
         {
             Console.WriteLine($"ID з форми: {form.Id}");
@@ -121,17 +153,24 @@ namespace MVC.Controllers
                 return View("Edit", form);
             }
 
-            var model = await _userService.FindByIdAsync(form.Id);
+            var model = await FindManageableUserInfoAsync(form.Id);
             if (model == null) return NotFound();
+
+            var photoUploadError = ValidatePhotoUploads(form.Photos);
+            if (photoUploadError != null)
+            {
+                ModelState.AddModelError(nameof(form.Photos), photoUploadError);
+                return View("Edit", form);
+            }
 
             form.Update(model);
 
-            // Видалення старих фото та додавання нових
-            if (form.Photos != null && form.Photos.Any())
+            if (form.Photos?.Any(photo => photo.Length > 0) == true)
             {
+                var newPhotoPaths = ProcessUploadedPhotos(form.Photos);
                 DeleteExistingPhotos(model);
-                model.PhotoPaths = ProcessUploadedPhotos(form.Photos);
-                model.AvatarPhoto = model.PhotoPaths.FirstOrDefault();
+                model.PhotoPaths = newPhotoPaths;
+                model.AvatarPhoto = newPhotoPaths.FirstOrDefault();
             }
 
             await _userService.SaveChangesAsync();
@@ -141,27 +180,30 @@ namespace MVC.Controllers
         // Відображення підтвердження видалення користувача
         public async Task<IActionResult> Delete(int id)
         {
-            var user = await _userService.FindByIdAsync(id);
+            var user = await FindManageableUserInfoAsync(id);
             return user == null ? NotFound() : View(user);
         }
 
         [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         // Підтвердження та видалення користувача
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var user = await _userService.FindByIdAsync(id);
+            var user = await FindManageableUserInfoAsync(id);
             if (user == null) return NotFound();
 
             DeleteExistingPhotos(user);
-            await _userService.DeleteByIdAsync(id);
+            await _userService.DeleteAsync(user);
 
             return RedirectToAction("Index");
         }
 
         // Встановлення аватару для користувача
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SetAvatar(int id, string photo)
         {
-            var user = await _userService.FindByIdAsync(id);
+            var user = await FindManageableUserInfoAsync(id);
             if (user == null || !user.PhotoPaths.Contains(photo)) return NotFound();
 
             user.AvatarPhoto = photo;
@@ -170,22 +212,39 @@ namespace MVC.Controllers
         }
 
         // Збереження завантажених фото та повернення їхніх шляхів
+        private static string? ValidatePhotoUploads(List<IFormFile>? photos)
+        {
+            var files = photos?.Where(photo => photo.Length > 0).ToList() ?? new List<IFormFile>();
+            if (files.Count > MaxPhotosPerProfile)
+            {
+                return $"A profile can contain at most {MaxPhotosPerProfile} photos.";
+            }
+
+            if (files.Any(photo => photo.Length > MaxPhotoSizeBytes))
+            {
+                return "Each photo must be 5 MB or smaller.";
+            }
+
+            if (files.Any(photo => !ImageUploadValidator.HasSupportedImageContent(photo)))
+            {
+                return "Photos must contain JPG, PNG, or GIF image data and use the matching file extension.";
+            }
+
+            return null;
+        }
+
         private List<string> ProcessUploadedPhotos(List<IFormFile>? photos)
         {
             var photoPaths = new List<string>();
-            if (photos == null || !photos.Any()) return photoPaths;
+            var files = photos?.Where(photo => photo.Length > 0).ToList();
+            if (files == null || files.Count == 0) return photoPaths;
 
             string uploadsFolder = Path.Combine(_env.WebRootPath, "images", "users");
             Directory.CreateDirectory(uploadsFolder);
 
-            foreach (var photo in photos)
+            foreach (var photo in files)
             {
-                var fileExtension = Path.GetExtension(photo.FileName).ToLower();
-                if (!new[] { ".jpg", ".jpeg", ".png", ".gif" }.Contains(fileExtension))
-                {
-                    throw new InvalidOperationException("Файл повинен бути зображенням (.jpg, .jpeg, .png, .gif)");
-                }
-
+                var fileExtension = Path.GetExtension(photo.FileName).ToLowerInvariant();
                 string uniqueFileName = $"user_{Guid.NewGuid()}{fileExtension}";
                 string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
@@ -214,8 +273,14 @@ namespace MVC.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Rate(int userInfoId, int rating)
         {
+            if (rating is < 1 or > 5)
+            {
+                return BadRequest();
+            }
+
             // Отримати поточного користувача з Claims
             int currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 

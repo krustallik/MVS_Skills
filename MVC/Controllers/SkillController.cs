@@ -50,8 +50,16 @@ namespace MVC.Controllers
 
         // Метод для обробки POST-запиту на створення навички
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(6_000_000)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 6_000_000)]
         public async Task<IActionResult> Create(int userId, string title, string color, int level, IFormFile? file)
         {
+            if (file != null && file.Length > SkillService.MaxLogoBytes)
+            {
+                return BadRequest("Skill logos must be 5 MB or smaller.");
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.UserId = userId;
@@ -86,8 +94,16 @@ namespace MVC.Controllers
 
         // Метод для обробки POST-запиту на оновлення навички
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(6_000_000)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 6_000_000)]
         public async Task<IActionResult> Edit(int id, int userId, string title, string color, int level, IFormFile? file)
         {
+            if (file != null && file.Length > SkillService.MaxLogoBytes)
+            {
+                return BadRequest("Skill logos must be 5 MB or smaller.");
+            }
+
             if (!ModelState.IsValid)
             {
                 ViewBag.UserId = userId;
@@ -112,6 +128,7 @@ namespace MVC.Controllers
 
         // Метод для підтвердження видалення навички
         [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int skillId, int userId)
         {
             await _service.RemoveSkillFromUserAsync(userId, skillId); // Видалення навички через сервіс

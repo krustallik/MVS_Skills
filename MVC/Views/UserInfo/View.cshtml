@@ -82,9 +82,13 @@
     {
         foreach (var photo in Model.PhotoPaths)
         {
-            <a asp-action="SetAvatar" asp-route-id="@Model.Id" asp-route-photo="@photo" title="Натисніть, щоб встановити як аватарку">
-                <img src="@photo" alt="User Photo" class="img-thumbnail m-1" style="width:100px; height:100px;" />
-            </a>
+            <form method="post" asp-action="SetAvatar" class="d-inline">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <input type="hidden" name="photo" value="@photo" />
+                <button type="submit" class="btn btn-link p-0 border-0" title="Set as avatar" aria-label="Set photo as avatar">
+                    <img src="@photo" alt="" class="img-thumbnail m-1" style="width:100px; height:100px;" />
+                </button>
+            </form>
         }
     }
     else

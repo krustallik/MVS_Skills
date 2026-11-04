@@ -19,10 +19,10 @@ public class AccountController(
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login([FromForm] LoginForm form, string returnUrl)
     {
-        // Якщо returnUrl порожній, встановлюємо значення за замовчуванням
-        if (string.IsNullOrEmpty(returnUrl))
+        if (!Url.IsLocalUrl(returnUrl))
         {
             returnUrl = Url.Content("~/");
         }
@@ -32,27 +32,17 @@ public class AccountController(
         }
 
         var user = await userManager.FindByEmailAsync(form.Login);
-        if (user == null || !(await userManager.CheckPasswordAsync(user, form.Password)))
+        if (user == null || !(await signInManager.PasswordSignInAsync(
+                user,
+                form.Password,
+                isPersistent: false,
+                lockoutOnFailure: true)).Succeeded)
         {
             ModelState.AddModelError(string.Empty, "Invalid login attempt");
             return View(form);
         }
 
-        var identity = new ClaimsIdentity(IdentityConstants.ApplicationScheme);
-        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-        identity.AddClaim(new Claim(ClaimTypes.Email, user.Email));
-
-        var roles = await userManager.GetRolesAsync(user);
-        foreach (var role in roles)
-        {
-            identity.AddClaim(new Claim(ClaimTypes.Role, role));
-        }
-
-        var principal = new ClaimsPrincipal(identity);
-        await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal);
-
-        
-        return Redirect(returnUrl);
+        return LocalRedirect(returnUrl);
     }
 
 
@@ -64,6 +54,7 @@ public class AccountController(
 
     [HttpPost]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
         await signInManager.SignOutAsync();
@@ -71,10 +62,10 @@ public class AccountController(
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Register([FromForm] RegisterForm form, string returnUrl)
     {
-        // Якщо returnUrl порожній, встановлюємо значення за замовчуванням
-        if (string.IsNullOrEmpty(returnUrl))
+        if (!Url.IsLocalUrl(returnUrl))
         {
             returnUrl = Url.Content("~/");
         }
@@ -115,6 +106,6 @@ public class AccountController(
 
         await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal);
 
-        return Redirect(returnUrl);
+        return LocalRedirect(returnUrl);
     }
 }

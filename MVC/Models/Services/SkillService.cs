@@ -11,6 +11,8 @@ namespace MVC.Models.Services
 {
     public class SkillService
     {
+        public const long MaxLogoBytes = 5 * 1024 * 1024;
+
         private readonly SiteContext _context;
 
         // Конструктор сервісу, ініціалізує контекст бази даних
@@ -83,7 +85,14 @@ namespace MVC.Models.Services
                 //TODO Адмін міняти може все а користувач лише рівень навички
                 userSkillInDatabase.Level = level;
                 userSkillInDatabase.Skill.Color = skill.Color;
-                userSkillInDatabase.Skill.LogoPath = SaveImage(file,userId);
+                if (file != null && file.Length > 0)
+                {
+                    if (!string.IsNullOrEmpty(userSkillInDatabase.Skill.LogoPath))
+                    {
+                        DeleteImage(userSkillInDatabase.Skill.LogoPath);
+                    }
+                    userSkillInDatabase.Skill.LogoPath = SaveImage(file, userId);
+                }
                 _context.UserSkills.Update(userSkillInDatabase);
             }
 
@@ -146,12 +155,16 @@ namespace MVC.Models.Services
         // Збереження зображення навички та повернення його шляху
         private string SaveImage(IFormFile file, int userId)
         {
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            if (file.Length <= 0 || file.Length > MaxLogoBytes)
+            {
+                throw new InvalidOperationException("Skill logo files must be 5 MB or smaller.");
+            }
+
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
-            if (!allowedExtensions.Contains(fileExtension))
+            if (!ImageUploadValidator.HasSupportedImageContent(file))
             {
-                throw new InvalidOperationException("Файл повинен бути зображенням (.jpg, .jpeg, .png, .gif)");
+                throw new InvalidOperationException("Skill logos must contain JPG, PNG, or GIF image data and use the matching file extension.");
             }
 
             string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "skills");

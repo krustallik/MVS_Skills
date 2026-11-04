@@ -18,8 +18,8 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(opt => {
     opt.SignIn.RequireConfirmedEmail = false;//                             мейлу
     opt.SignIn.RequireConfirmedPhoneNumber = false;//                   та телефону
 
-    opt.Password.RequiredLength = 3;
-    opt.Password.RequiredUniqueChars = 0;
+    opt.Password.RequiredLength = 15;
+    opt.Password.RequiredUniqueChars = 1;
     opt.Password.RequireDigit = false;
     opt.Password.RequireLowercase = false;
     opt.Password.RequireUppercase = false;

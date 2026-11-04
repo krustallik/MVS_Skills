@@ -33,6 +33,15 @@ namespace MVC.Models.Services
                                  .FirstOrDefaultAsync(u => u.Id == id);
         }
 
+        // Find a profile only when it belongs to the requesting user.
+        public async Task<UserInfo?> FindByIdForOwnerAsync(int id, int ownerId)
+        {
+            return await _context.UserInfos
+                                 .Include(u => u.UserSkills)
+                                 .ThenInclude(us => us.Skill)
+                                 .FirstOrDefaultAsync(u => u.Id == id && u.OwnerId == ownerId);
+        }
+
         // Додати нового користувача до бази даних
         public async Task AddAsync(UserInfo user)
         {
@@ -40,15 +49,11 @@ namespace MVC.Models.Services
             await _context.SaveChangesAsync();
         }
 
-        // Видалити користувача за ID
-        public async Task DeleteByIdAsync(int id)
+        // Delete the profile instance after the caller has loaded it through an authorized query.
+        public async Task DeleteAsync(UserInfo user)
         {
-            var user = await FindByIdAsync(id);
-            if (user != null)
-            {
-                _context.UserInfos.Remove(user);
-                await _context.SaveChangesAsync();
-            }
+            _context.UserInfos.Remove(user);
+            await _context.SaveChangesAsync();
         }
 
         // Додати навичку користувачеві
