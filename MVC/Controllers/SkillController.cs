@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using MVC.Models;
@@ -16,10 +16,10 @@ namespace MVC.Controllers
         // Список кольорових опцій для вибору в інтерфейсі
         private readonly List<SelectListItem> _colorOptions = new()
         {
-            new() { Value = "#FF5733", Text = "Coral" },
-            new() { Value = "#33FF57", Text = "Lime Green" },
-            new() { Value = "#3357FF", Text = "Royal Blue" },
-            new() { Value = "#FF33A8", Text = "Hot Pink" }
+            new() { Value = "#A9531E", Text = "Burnt orange" },
+            new() { Value = "#D5A03B", Text = "Honey" },
+            new() { Value = "#647486", Text = "Slate blue" },
+            new() { Value = "#765A48", Text = "Walnut" }
         };
 
         // Конструктор контролера, ініціалізує сервіс
@@ -64,7 +64,11 @@ namespace MVC.Controllers
             {
                 ViewBag.UserId = userId;
                 ViewBag.ColorOptions = _colorOptions;
-                return View(); // Якщо модель невалідна, повертаємо ту ж сторінку
+                ViewBag.SkillOptions = await _service.GetAllAsync();
+                ViewBag.SelectedTitle = title;
+                ViewBag.SelectedColor = color;
+                ViewBag.SubmittedLevel = Request.Form["level"].ToString();
+                return View(new UserSkill { UserInfoId = userId, Level = level, Skill = new Skill { Title = title, Color = color } });
             }
 
             var skill = new Skill
@@ -106,9 +110,16 @@ namespace MVC.Controllers
 
             if (!ModelState.IsValid)
             {
+                var userSkill = await _service.GetByIdAsync(userId, id);
+                if (userSkill == null) return NotFound();
+
                 ViewBag.UserId = userId;
                 ViewBag.ColorOptions = _colorOptions;
-                return View(); // Якщо модель невалідна, повертаємо ту ж сторінку
+                ViewBag.SkillOptions = await _service.GetAllAsync();
+                ViewBag.SelectedTitle = title;
+                ViewBag.SelectedColor = color;
+                ViewBag.SubmittedLevel = Request.Form["level"].ToString();
+                return View(userSkill);
             }
 
             await _service.UpdateAsync(userId, id, title, color, level, file); // Оновлення навички

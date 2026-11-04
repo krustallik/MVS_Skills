@@ -1,49 +1,33 @@
-﻿@using MVC.Areas.Auth.Models.Forms
+@using MVC.Areas.Auth.Models.Forms
 @model LoginForm
-
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Sign in";
     var returnUrl = Context.Request.Query["ReturnUrl"];
     if (string.IsNullOrEmpty(returnUrl))
     {
         returnUrl = "/";
     }
 }
-
-<div class="card">
-    <div class="card-header">
-        <h4>@ViewData["Title"]</h4>
-    </div>
-
-    <!-- Приклад форми з використанням TagHelper-ів -->
-    <form method="post" enctype="multipart/form-data"
-          asp-area="Auth"
-          asp-controller="Account"
-          asp-action="Login">
+<section class="auth-card">
+    <p class="eyebrow">Welcome back</p>
+    <h1>Sign in</h1>
+    <p>Continue to your profile and the people directory.</p>
+    <form method="post" asp-area="Auth" asp-controller="Account" asp-action="Login">
         <input type="hidden" name="ReturnUrl" value="@returnUrl" />
-
-        <div class="card-body">
-            <div class="mb-3">
-                <label asp-for="Login" class="form-label"></label>
-                <input asp-for="Login" class="form-control" type="text" />
-                <span asp-validation-for="Login" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" type="password" />
-                <span asp-validation-for="Password" class="text-danger"></span>
-            </div>
-        </div>
-
-        <div class="card-footer">
-            <button class="btn btn-primary" type="submit">Login</button>
-
-            <a asp-area="Auth"
-               asp-controller="Account"
-               asp-action="Register"
-               asp-route-ReturnUrl="@returnUrl"
-               class="btn btn-outline-success">Register</a>
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <label asp-for="Login" class="auth-field">
+            Email address
+            <input asp-for="Login" class="form-control" type="email" autocomplete="username" />
+            <span asp-validation-for="Login"></span>
+        </label>
+        <label asp-for="Password" class="auth-field">
+            Password
+            <input asp-for="Password" class="form-control" type="password" autocomplete="current-password" />
+            <span asp-validation-for="Password"></span>
+        </label>
+        <div class="auth-actions">
+            <button class="button button-search" type="submit">Sign in <span aria-hidden="true">→</span></button>
+            <a class="button button-quiet" asp-area="Auth" asp-controller="Account" asp-action="Register" asp-route-ReturnUrl="@returnUrl">Create account</a>
         </div>
     </form>
-</div>
+</section>

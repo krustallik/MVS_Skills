@@ -2,20 +2,32 @@
 
 MVS Skills is an academic ASP.NET Core MVC skill-sharing prototype. Users can create professional profiles, search by name, profession, and skill, manage their own profiles, upload profile images, and rate other profiles.
 
-> **Data provenance:** The existing repository history contains a tracked SQLite database and profile or image artifacts whose provenance has not been established. This change adds source code and a synthetic-only screenshot; it does not add records from that database. Do not reuse historical data as demo data until its provenance is reviewed.
+> **Demo data:** The owner confirms that users, profiles, and SQLite/JSON records in this academic project were generated randomly for testing and contain no real personal data. This update removes runtime databases, profile JSON, and uploaded images from the current Git index while preserving local copies. Git history is not rewritten.
 
-## Demonstration
+## Interface preview
 
-The screenshot was captured from the running application with an isolated SQLite database and a synthetic profile.
+These screenshots show the running MVC application with synthetic profiles and an isolated SQLite database. No historical repository database or user-uploaded image was used.
 
-![Profile search showing a synthetic demo profile](docs/screenshots/demo-search.png)
+### Professional discovery
+
+![Desktop discovery with synthetic professional profiles](docs/screenshots/desktop-discovery-after.png)
+
+![Mobile discovery at 390 px](docs/screenshots/mobile-discovery-after.png)
+
+### Profile and account flows
+
+![Synthetic professional profile with skills and ratings](docs/screenshots/profile-detail-after.png)
+
+![English registration form](docs/screenshots/registration-after.png)
+
+![Synthetic account profile editor](docs/screenshots/profile-edit-after.png)
 
 ## Features
 
 - Search profiles by name, profession, and selected skills.
 - Register and sign in with ASP.NET Identity.
 - Create and manage profiles under the authenticated owner.
-- Upload profile images with file-count, size, extension, and signature checks.
+- Upload profile gallery photos and skill logos with file-count, size, extension, and signature checks.
 - Select an uploaded image as the profile avatar.
 - Rate another user's profile from 1 to 5.
 - Manage skills through admin-authorized MVC actions.
@@ -60,7 +72,7 @@ Open http://127.0.0.1:5179/ and register a local account. Use the User Info area
 
 ## Verification
 
-The MVC project built successfully after the source changes. Manual HTTP scenarios against the isolated database verified registration and login, lockout after repeated failed sign-ins, antiforgery enforcement, profile creation and owner edits, rejection of cross-owner edits and deletes, rating bounds, and rejection of a text file renamed with an image extension. Anonymous profile search was reproduced as HTTP 500, fixed, and verified as HTTP 200 with the synthetic profile.
+The MVC project built successfully after the source changes. Browser review covered discovery, profile details, registration, and profile editing at 360, 390, 768, 1024, and 1440 px with no horizontal overflow. Search was exercised against synthetic profiles. Manual HTTP scenarios against the isolated database verified registration and login, lockout after repeated failed sign-ins, antiforgery enforcement, profile creation and owner edits, rejection of cross-owner edits and deletes, rating bounds, and rejection of a text file renamed with an image extension. Anonymous profile search was reproduced as HTTP 500, fixed, and verified as HTTP 200 with the synthetic profile.
 
 There is no committed automated test project. These runtime checks are not a full security audit or image-decoder test.
 
@@ -68,5 +80,5 @@ There is no committed automated test project. These runtime checks are not a ful
 
 - This is an academic prototype; production deployment and external hosting have not been verified.
 - The application uses local SQLite persistence and local image files. A deployment needs an explicit plan for database and upload storage, backups, access control, and operations.
-- Uploads are checked against allowed extensions and file signatures, but images are not fully decoded and persistent per-user storage quotas are not enforced.
+- Profile-gallery and skill-logo uploads have size and signature checks but are not fully decoded. Account-avatar uploads currently check only the filename extension and lack an application-level size limit or storage quota; account deletion also leaves uploaded avatar files behind. Address this before exposing the prototype to untrusted users.
 - The existing public Git history still needs a data-provenance review. This source update does not remove or rewrite historical records.

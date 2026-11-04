@@ -1,41 +1,54 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
+using MVC.Areas.Auth.Models.Services;
 using MVC.Models;
 using MVC.Models.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using MVC.Areas.Auth.Models.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Додаємо підтримку MVC
 builder.Services.AddControllersWithViews();
 
-// Реєструємо контекст бази даних з SQLite
+var configuredConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(configuredConnection))
+{
+    if (!builder.Environment.IsDevelopment())
+    {
+        throw new InvalidOperationException(
+            "ConnectionStrings:DefaultConnection must be configured outside Development.");
+    }
+
+    var localDataDirectory = Path.Combine(builder.Environment.ContentRootPath, "App_Data");
+    Directory.CreateDirectory(localDataDirectory);
+    configuredConnection = $"Data Source={Path.Combine(localDataDirectory, "site.db")}";
+}
+
 builder.Services.AddDbContext<SiteContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=site.db"));
+    options.UseSqlite(configuredConnection));
 
-builder.Services.AddIdentity<User, IdentityRole<int>>(opt => { 
-    opt.SignIn.RequireConfirmedAccount = false; //вхід без підтверджуення аккаунту 
-    opt.SignIn.RequireConfirmedEmail = false;//                             мейлу
-    opt.SignIn.RequireConfirmedPhoneNumber = false;//                   та телефону
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.SignIn.RequireConfirmedEmail = false;
+    options.SignIn.RequireConfirmedPhoneNumber = false;
 
-    opt.Password.RequiredLength = 15;
-    opt.Password.RequiredUniqueChars = 1;
-    opt.Password.RequireDigit = false;
-    opt.Password.RequireLowercase = false;
-    opt.Password.RequireUppercase = false;
-    opt.Password.RequireNonAlphanumeric = false; //вимкненя вимог до паролю
-})  .AddRoles<IdentityRole<int>>()
-    .AddEntityFrameworkStores<SiteContext>();
+    options.Password.RequiredLength = 15;
+    options.Password.RequiredUniqueChars = 1;
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+})
+.AddRoles<IdentityRole<int>>()
+.AddEntityFrameworkStores<SiteContext>();
 
-builder.Services.ConfigureApplicationCookie(options => //налаштування редіректів коли користувач незалогінений
+builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = new PathString("/Auth/Account/Login");
     options.LogoutPath = new PathString("/Auth/Account/Logout");
     options.AccessDeniedPath = new PathString("/Auth/Account/AccessDenied");
 });
 
-
-// Зареєструємо сервіси, які тепер працюватимуть через EF
 builder.Services.AddScoped<UserInfoService>();
 builder.Services.AddScoped<SkillService>();
 builder.Services.AddScoped<HomeService>();
@@ -44,7 +57,6 @@ builder.Services.AddScoped<AdminService>();
 
 var app = builder.Build();
 
-// Конфігурація конвеєра обробки запитів
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -53,17 +65,19 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
-
+var englishOnlyLocalization = new RequestLocalizationOptions()
+    .SetDefaultCulture("en-US")
+    .AddSupportedCultures("en-US")
+    .AddSupportedUICultures("en-US");
+englishOnlyLocalization.RequestCultureProviders.Clear();
+app.UseRequestLocalization(englishOnlyLocalization);
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
 
 app.MapControllerRoute(
     name: "default",

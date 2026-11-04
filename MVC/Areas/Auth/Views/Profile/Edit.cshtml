@@ -1,43 +1,59 @@
-﻿@model MVC.Areas.Auth.Models.Forms.ProfileForm
+@model MVC.Areas.Auth.Models.Forms.ProfileForm
 @{
-    ViewData["Title"] = "Edit Profile";
+    ViewData["Title"] = "Edit account details";
 }
-<div>
-    <h1 class="display-4">@ViewData["Title"]</h1>
 
-    <div class="row">
-        <div class="col-md-6">
-            <form method="post" enctype="multipart/form-data" asp-area="Auth" asp-controller="Profile" asp-action="Edit">
-                <div class="card">
-                    <div class="card-header">Edit Profile Information</div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            @Html.LabelFor(x => x.FullName, new { @class = "form-label" })
-                            @Html.TextBoxFor(x => x.FullName, new { @class = "form-control" })
-                            @Html.ValidationMessageFor(x => x.FullName, null, new { @class = "text-danger" })
-                        </div>
-                        <div class="mb-3">
-                            @Html.LabelFor(x => x.Phone, new { @class = "form-label" })
-                            @Html.TextBoxFor(x => x.Phone, new { @class = "form-control" })
-                            @Html.ValidationMessageFor(x => x.Phone, null, new { @class = "text-danger" })
-                        </div>
-                        <div class="mb-3">
-                            @Html.LabelFor(x => x.Image, new { @class = "form-label" })
-                            <input type="file" name="Image" class="form-control" accept=".jpg,.jpeg,.png,.gif" />
-                        </div>
-                        @if (!string.IsNullOrEmpty(Model.ImagePath))
-                        {
-                            <div class="mb-3">
-                                <img src="@Model.ImagePath" alt="Current Avatar" style="max-width: 150px;" />
-                            </div>
-                        }
-                    </div>
-                    <div class="card-footer">
-                        <button type="submit" class="btn btn-primary">Save</button>
-                        <a asp-area="Auth" asp-controller="Profile" asp-action="Index" class="btn btn-outline-success">Return</a>
-                    </div>
+<section class="editor-heading">
+    <a class="back-link" asp-area="Auth" asp-controller="Profile" asp-action="Index">← Back to account settings</a>
+    <p class="eyebrow">Your account</p>
+    <h1>Edit account details</h1>
+    <p>Update the name and phone number connected to your account.</p>
+</section>
+
+<div class="editor-layout">
+    <form class="profile-editor" method="post" enctype="multipart/form-data" asp-area="Auth" asp-controller="Profile" asp-action="Edit">
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <section class="editor-section">
+            <p class="eyebrow">Contact details</p>
+            <div class="editor-grid">
+                <div class="form-field editor-wide">
+                    <label asp-for="FullName">Full name</label>
+                    <input asp-for="FullName" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="FullName"></span>
                 </div>
-            </form>
+                <div class="form-field editor-wide">
+                    <label asp-for="Phone">Phone number <span class="optional-label">Optional</span></label>
+                    <input asp-for="Phone" class="form-control" type="tel" autocomplete="tel" />
+                    <span asp-validation-for="Phone"></span>
+                </div>
+                <div class="form-field editor-wide">
+                    <label asp-for="Image">Profile photo <span class="optional-label">Optional</span></label>
+                    <div class="file-picker">
+                    <input asp-for="Image" class="file-picker-input" type="file" data-status-target="account-photo-status" aria-describedby="account-photo-help account-photo-status" accept=".jpg,.jpeg,.png,.gif" />
+                    <label class="file-picker-button" for="Image">Choose a photo</label>
+                    <span id="account-photo-status" class="file-picker-status">No file selected</span>
+                </div>
+                    <small id="account-photo-help">Upload a JPG, PNG, or GIF image.</small>
+                    <span asp-validation-for="Image"></span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <div class="form-field editor-wide">
+                        <span>Current photo</span>
+                        <img class="account-profile-image" src="@Model.ImagePath" alt="" />
+                    </div>
+                }
+            </div>
+        </section>
+        <div class="editor-actions">
+            <a class="button button-quiet" asp-area="Auth" asp-controller="Profile" asp-action="Index">Cancel</a>
+            <button type="submit" class="button button-search">Save changes</button>
         </div>
-    </div>
+    </form>
+
+    <aside class="editor-aside">
+        <span class="aside-label">Account details</span>
+        <h2>Keep your contact information current.</h2>
+        <p>Your account details help you manage your access. Your professional profile is edited separately.</p>
+    </aside>
 </div>

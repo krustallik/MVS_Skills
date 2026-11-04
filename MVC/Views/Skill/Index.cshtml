@@ -1,58 +1,53 @@
-﻿@model List<MVC.Models.UserSkill>
+@model List<MVC.Models.UserSkill>
 @{
-    ViewData["Title"] = "Список навичок";
+    ViewData["Title"] = "Manage skills";
     var userId = (int)ViewBag.UserId;
 }
 
-<h1>Список навичок для користувача з id = @userId</h1>
+<section class="editor-heading">
+    <a class="back-link" asp-controller="UserInfo" asp-action="View" asp-route-id="@userId">← Back to profile</a>
+    <p class="eyebrow">Profile management</p>
+    <h1>Manage skills</h1>
+    <p>Keep the expertise on this profile accurate, clear, and easy to scan.</p>
+</section>
 
-<!-- Кнопка для створення нової навички -->
-<a asp-action="Create" asp-route-userId="@userId" class="btn btn-primary">Створити нову навичку</a>
+<div class="skill-manage-toolbar">
+    <p><strong>Profile @userId</strong><span>@Model.Count @(Model.Count == 1 ? "skill" : "skills")</span></p>
+    <a asp-action="Create" asp-route-userId="@userId" class="button button-search">Add a skill</a>
+</div>
 
-<!-- Таблиця зі списком навичок -->
-<table class="table table-bordered mt-3">
-    <thead>
-        <tr>
-            <th>Логотип</th>
-            <th>Назва</th>
-            <th>Колір</th>
-            <th>Рівень</th>
-            <th>Дії</th>
-        </tr>
-    </thead>
-    <tbody>
+@if (Model.Count == 0)
+{
+    <div class="empty-state skill-empty">
+        <span class="empty-mark" aria-hidden="true">＋</span>
+        <div>
+            <p class="eyebrow">A clear place to start</p>
+            <h2>No skills on this profile yet.</h2>
+            <p>Add a skill and choose a level to help people understand this professional's strengths.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="skill-list-editor" aria-label="Skills on profile">
         @foreach (var userSkill in Model)
         {
-            <tr>
-                <!-- Відображення логотипу навички -->
-                <td>
-                    @if (!string.IsNullOrEmpty(userSkill.Skill.LogoPath))
-                    {
-                        <img src="@userSkill.Skill.LogoPath" alt="Логотип" width="80" height="80" class="img-thumbnail" />
-                    }
-                    else
-                    {
-                        <span class="text-muted">Немає логотипу</span>
-                    }
-                </td>
-                <!-- Відображення назви навички -->
-                <td>@userSkill.Skill.Title</td>
-                <!-- Відображення кольору навички -->
-                <td>
-                    <span style="background-color:@userSkill.Skill.Color; padding:5px 10px; color:white;">
-                        @userSkill.Skill.Color
-                    </span>
-                </td>
-                <!-- Відображення рівня володіння навичкою -->
-                <td>@userSkill.Level</td>
-                <!-- Дії: редагування та видалення навички -->
-                <td>
-                    <a asp-action="Edit" asp-route-id="@userSkill.SkillId" asp-route-userId="@userId" class="btn btn-warning btn-sm">Редагувати</a>
-                    <form asp-action="Delete" asp-route-skillId="@userSkill.SkillId" asp-route-userId="@userId" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Ви впевнені, що хочете видалити цю навичку?');">Видалити</button>
-                    </form>
-                </td>
-            </tr>
+            var skillInitial = string.IsNullOrWhiteSpace(userSkill.Skill.Title) ? "S" : userSkill.Skill.Title[..1].ToUpperInvariant();
+            <article class="managed-skill-row">
+                <span class="managed-skill-mark" aria-hidden="true">@skillInitial</span>
+                <div class="managed-skill-copy">
+                    <h2>@userSkill.Skill.Title</h2>
+                    <p>Level @userSkill.Level</p>
+                </div>
+                <div class="managed-skill-meter" role="meter" aria-label="@userSkill.Skill.Title proficiency" aria-valuemin="1" aria-valuemax="100" aria-valuenow="@userSkill.Level">
+                    <span>Proficiency</span>
+                    <div class="skill-meter-track" aria-hidden="true"><span style="width: @Math.Clamp(userSkill.Level, 1, 100)%"></span></div>
+                </div>
+                <div class="managed-skill-actions">
+                    <a class="text-action" asp-action="Edit" asp-route-id="@userSkill.SkillId" asp-route-userId="@userId">Edit</a>
+                    <a class="text-action text-action-danger" asp-action="Delete" asp-route-skillId="@userSkill.SkillId" asp-route-userId="@userId">Remove</a>
+                </div>
+            </article>
         }
-    </tbody>
-</table>
+    </div>
+}

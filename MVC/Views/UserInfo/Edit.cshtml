@@ -1,66 +1,104 @@
-﻿@model MVC.Models.Forms.UserInfoForm
+@using System.Globalization
+@model MVC.Models.Forms.UserInfoForm
 @{
-    ViewData["Title"] = "Edit " + Model.Name;
-    var i = 0;
-    var list = new SelectList(Model.Professions.Select(x => new { Id = i++, Title = x }).ToList(), "Id", "Title");
+    ViewData["Title"] = "Edit profile";
+    var professionIndex = 0;
+    var professions = new SelectList(Model.Professions.Select(name => new { Id = professionIndex++, Title = name }).ToList(), "Id", "Title");
+    var birthdayValue = Model.Birthday.ToString("MM/dd/yyyy", CultureInfo.InvariantCulture);
 }
-<div>
-    <h1 class="display-4">@ViewData["Title"]</h1>
-    <form method="post" enctype="multipart/form-data" asp-controller="UserInfo" asp-action="EditPost">
-        <!-- Передаємо id через приховане поле -->
-        @Html.HiddenFor(x => x.Id)
-        <div class="card">
-            <div class="card-body">
-                <div class="mb-3">
-                    @Html.LabelFor(x => x.Name, new { @class = "form-label" })
-                    @Html.TextBoxFor(x => x.Name, new { @class = "form-control" })
-                    @Html.ValidationMessageFor(x => x.Name, null, new { @class = "text-danger" })
+
+<section class="editor-heading">
+    <a class="back-link" asp-controller="UserInfo" asp-action="View" asp-route-id="@Model.Id">← Back to profile</a>
+    <p class="eyebrow">Profile details</p>
+    <h1>Edit your profile</h1>
+    <p>Keep your experience, contact details, and availability current.</p>
+</section>
+
+<div class="editor-layout">
+    <form class="profile-editor" method="post" enctype="multipart/form-data" asp-controller="UserInfo" asp-action="EditPost">
+        @Html.HiddenFor(model => model.Id)
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <section class="editor-section" aria-labelledby="edit-about-heading">
+            <p class="eyebrow" id="edit-about-heading">About you</p>
+            <div class="editor-grid">
+                <div class="form-field">
+                    <label asp-for="Name">Name</label>
+                    <input asp-for="Name" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="Name"></span>
                 </div>
-                <div class="mb-3">
-                    @Html.LabelFor(x => x.Email, new { @class = "form-label" })
-                    @Html.TextBoxFor(x => x.Email, new { @class = "form-control", type = "email" })
-                    @Html.ValidationMessageFor(x => x.Email, null, new { @class = "text-danger" })
+                <div class="form-field">
+                    <label asp-for="ProfessionId">Profession</label>
+                    @Html.DropDownListFor(model => model.ProfessionId, professions, "Choose a profession", new { @class = "form-select" })
+                    <span asp-validation-for="ProfessionId"></span>
                 </div>
-                <div class="mb-3">
-                    @Html.LabelFor(x => x.ProfessionId, new { @class = "form-label" })
-                    @Html.DropDownListFor(x => x.ProfessionId, list, new { @class = "form-control" })
-                    @Html.ValidationMessageFor(x => x.ProfessionId, null, new { @class = "text-danger" })
-                </div>
-                <div class="mb-3">
-                    @Html.LabelFor(x => x.Description, new { @class = "form-label" })
-                    @Html.TextAreaFor(x => x.Description, new { @class = "form-control", rows = 5 })
-                    @Html.ValidationMessageFor(x => x.Description, null, new { @class = "text-danger" })
-                </div>
-                <div class="mb-3">
-                    @Html.LabelFor(x => x.Birthday, new { @class = "form-label" })
-                    @Html.TextBoxFor(x => x.Birthday, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date" })
-                    @Html.ValidationMessageFor(x => x.Birthday, null, new { @class = "text-danger" })
-                </div>
-                <div class="mb-3 form-check">
-                    @Html.LabelFor(x => x.IsActive, new { @class = "form-check-label" })
-                    @Html.CheckBoxFor(x => x.IsActive, new { @class = "form-check-input" })
-                    @Html.ValidationMessageFor(x => x.IsActive, null, new { @class = "text-danger" })
-                </div>
-                <div class="mb-3">
-                    @Html.LabelFor(x => x.ExpirienseYears, new { @class = "form-label" })
-                    @Html.TextBoxFor(x => x.ExpirienseYears, new { @class = "form-control", type = "number", min = 0, max = 99, step = 1 })
-                    @Html.ValidationMessageFor(x => x.ExpirienseYears, null, new { @class = "text-danger" })
-                </div>
-                <div class="mb-3">
-                    @Html.LabelFor(x => x.Salary, new { @class = "form-label" })
-                    @Html.TextBoxFor(x => x.Salary, new { @class = "form-control", type = "number", min = 0, step = 0.01 })
-                    @Html.ValidationMessageFor(x => x.Salary, null, new { @class = "text-danger" })
-                </div>
-                <div class="mb-3">
-                    @Html.LabelFor(x => x.Photos, new { @class = "form-label" })
-                    <input type="file" name="Photos" class="form-control" multiple="multiple" accept="image/*" />
-                    @Html.ValidationMessageFor(x => x.Photos, null, new { @class = "text-danger" })
+                <div class="form-field editor-wide">
+                    <label asp-for="Description">About your work</label>
+                    <textarea asp-for="Description" class="form-control" rows="5" placeholder="Describe your focus, strengths, and the work you enjoy."></textarea>
+                    <span asp-validation-for="Description"></span>
                 </div>
             </div>
-            <div class="card-footer">
-                <button class="btn btn-primary" type="submit">Save</button>
+        </section>
+
+        <section class="editor-section" aria-labelledby="edit-experience-heading">
+            <p class="eyebrow" id="edit-experience-heading">Experience & contact</p>
+            <div class="editor-grid">
+                <div class="form-field">
+                    <label asp-for="ExpirienseYears">Years of experience</label>
+                    <input asp-for="ExpirienseYears" class="form-control" type="number" min="0" max="100" step="1" />
+                    <span asp-validation-for="ExpirienseYears"></span>
+                </div>
+                <div class="form-field">
+                    <label asp-for="Salary">Expected salary</label>
+                    <input asp-for="Salary" class="form-control" type="text" lang="en-US" inputmode="decimal" autocomplete="off" />
+                    <small>Use a decimal point, for example 1250.00.</small>
+                    <span asp-validation-for="Salary"></span>
+                </div>
+                <div class="form-field">
+                    <label asp-for="Email">Contact email</label>
+                    <input asp-for="Email" class="form-control" type="email" autocomplete="email" />
+                    <span asp-validation-for="Email"></span>
+                </div>
+                <div class="form-field">
+                    <label asp-for="Birthday">Date of birth</label>
+                    <input asp-for="Birthday" class="form-control" type="text" lang="en-US" inputmode="numeric" placeholder="MM/DD/YYYY" autocomplete="bday" value="@birthdayValue" />
+                    <small>Use month/day/year.</small>
+                    <span asp-validation-for="Birthday"></span>
+                </div>
+                <div class="form-field editor-wide checkbox-field">
+                    <label asp-for="IsActive">Open to opportunities</label>
+                    <input asp-for="IsActive" class="form-check-input" />
+                    <small>Show that you are open to relevant professional conversations.</small>
+                    <span asp-validation-for="IsActive"></span>
+                </div>
             </div>
+        </section>
+
+        <section class="editor-section" aria-labelledby="edit-photos-heading">
+            <p class="eyebrow" id="edit-photos-heading">Profile photos</p>
+            <div class="form-field">
+                <label asp-for="Photos">Add or replace profile photos</label>
+                <div class="file-picker">
+                    <input id="profile-photos" type="file" name="Photos" class="file-picker-input" data-status-target="profile-photos-status" aria-describedby="profile-photos-help profile-photos-status" multiple accept=".jpg,.jpeg,.png,.gif" />
+                    <label class="file-picker-button" for="profile-photos">Choose files</label>
+                    <span id="profile-photos-status" class="file-picker-status">No files selected</span>
+                </div>
+                <small id="profile-photos-help">Upload up to 5 JPG, PNG, or GIF images. Maximum 5 MB each.</small>
+                <span asp-validation-for="Photos"></span>
+            </div>
+        </section>
+
+        <div class="editor-actions">
+            <a class="button button-quiet" asp-controller="UserInfo" asp-action="View" asp-route-id="@Model.Id">Cancel</a>
+            <button class="button button-search" type="submit">Save changes</button>
         </div>
     </form>
-    <a asp-controller="UserInfo" asp-action="Index" class="btn btn-outline-success">Return</a>
+
+    <aside class="editor-aside">
+        <span class="aside-label">Profile editor</span>
+        <h2>Make your strengths easy to understand.</h2>
+        <p>Use clear details and a short description. Your skills can be managed from the profile page.</p>
+        <div class="aside-rule"></div>
+        <p class="aside-note">Changes appear on your professional profile after you save.</p>
+    </aside>
 </div>

@@ -1,31 +1,28 @@
-﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using MVC.Areas.Auth.Models.Forms;
 using MVC.Models;
-using System.Security.Claims;
 
 namespace MVC.Areas.Auth.Controllers;
+
 [Area("Auth")]
 public class AccountController(
     UserManager<User> userManager,
     SignInManager<User> signInManager) : Controller
 {
     [HttpGet]
-    public IActionResult Login()
-    {
-        return View(new LoginForm());
-    }
+    public IActionResult Login() => View(new LoginForm());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login([FromForm] LoginForm form, string returnUrl)
+    public async Task<IActionResult> Login([FromForm] LoginForm form, string? returnUrl)
     {
         if (!Url.IsLocalUrl(returnUrl))
         {
             returnUrl = Url.Content("~/");
         }
+
         if (!ModelState.IsValid)
         {
             return View(form);
@@ -38,19 +35,15 @@ public class AccountController(
                 isPersistent: false,
                 lockoutOnFailure: true)).Succeeded)
         {
-            ModelState.AddModelError(string.Empty, "Invalid login attempt");
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return View(form);
         }
 
         return LocalRedirect(returnUrl);
     }
 
-
     [HttpGet]
-    public IActionResult Register()
-    {
-        return View(new RegisterForm());
-    }
+    public IActionResult Register() => View(new RegisterForm());
 
     [HttpPost]
     [Authorize]
@@ -63,7 +56,7 @@ public class AccountController(
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Register([FromForm] RegisterForm form, string returnUrl)
+    public async Task<IActionResult> Register([FromForm] RegisterForm form, string? returnUrl)
     {
         if (!Url.IsLocalUrl(returnUrl))
         {
@@ -75,37 +68,47 @@ public class AccountController(
             return View(form);
         }
 
-        if (await userManager.FindByEmailAsync(form.Login) != null)
+        var existingUser = await userManager.FindByEmailAsync(form.Login);
+        if (existingUser != null)
         {
-            ModelState.AddModelError(nameof(form.Login), "User already exists");
-            return View(form);
+            return RegistrationResponse(returnUrl);
         }
 
-        var user = new User()
+        var user = new User
         {
             Email = form.Login,
             UserName = form.Login,
         };
 
         var result = await userManager.CreateAsync(user, form.Password);
-
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(nameof(form.Login), "Error ...");
+            if (result.Errors.Any(error => error.Code is "DuplicateEmail" or "DuplicateUserName"))
+            {
+                return RegistrationResponse(returnUrl);
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
             return View(form);
         }
 
-        await userManager.AddToRoleAsync(user, "User");
+        var roleResult = await userManager.AddToRoleAsync(user, "User");
+        if (!roleResult.Succeeded)
+        {
+            await userManager.DeleteAsync(user);
+            return RegistrationResponse(returnUrl);
+        }
 
-        var identity = new ClaimsIdentity(IdentityConstants.ApplicationScheme);
-        identity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-        identity.AddClaim(new Claim(ClaimTypes.Email, user.Email));
-        identity.AddClaim(new Claim(ClaimTypes.Role, "User"));
+        return RegistrationResponse(returnUrl);
+    }
 
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(IdentityConstants.ApplicationScheme, principal);
-
-        return LocalRedirect(returnUrl);
+    private IActionResult RegistrationResponse(string? returnUrl)
+    {
+        TempData["AccountNotice"] = "If registration can be completed, your account is ready. Sign in to continue.";
+        return LocalRedirect(returnUrl ?? Url.Content("~/"));
     }
 }

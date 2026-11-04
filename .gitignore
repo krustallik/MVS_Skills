@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Local app data and user-uploaded files must never be committed as demo content.
+MVC/App_Data/
+MVC/site.db
+MVC/site.db-*
+MVC/user-info.json
+MVC/wwwroot/images/avatars/
+MVC/wwwroot/images/skills/
+MVC/wwwroot/images/users/

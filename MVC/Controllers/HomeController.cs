@@ -1,15 +1,14 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MVC.Models;
 using MVC.Models.Services;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace MVC.Controllers
 {
     public class HomeController : Controller
     {
+        private const int MaxSearchTextLength = 100;
+        private const int MaxSelectedFilters = 20;
         private readonly HomeService _homeService;
 
         public HomeController(HomeService homeService)
@@ -21,35 +20,26 @@ namespace MVC.Controllers
         {
             ViewBag.Professions = await _homeService.GetAllProfessionsAsync();
             ViewBag.Skills = await _homeService.GetAllSkillsAsync();
-            return View();
+            return View(await _homeService.SearchAsync(new SearchDto()));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Search([FromBody] SearchDto model)
+        public async Task<IActionResult> Search([FromBody] SearchDto? model)
         {
-            var users = await _homeService.GetAllUsersAsync();
-
-            // Фільтрація за ім'ям
-            if (!string.IsNullOrEmpty(model.SearchText))
+            if (model is null
+                || model.SearchText?.Length > MaxSearchTextLength
+                || model.SelectedProfessions?.Count > MaxSelectedFilters
+                || model.SelectedProfessions?.Any(profession => string.IsNullOrWhiteSpace(profession)
+                    || profession.Length > MaxSearchTextLength) == true
+                || model.SelectedSkills?.Count > MaxSelectedFilters
+                || model.SelectedSkills?.Any(skillId => skillId <= 0) == true)
             {
-                users = users.Where(u => u.Name.Contains(model.SearchText, StringComparison.OrdinalIgnoreCase)).ToList();
+                return BadRequest("Search filters are invalid.");
             }
 
-            // Фільтрація за професіями
-            if (model.SelectedProfessions != null && model.SelectedProfessions.Any())
-            {
-                users = users.Where(u => model.SelectedProfessions.Contains(u.Profession)).ToList();
-            }
-
-            // Фільтрація за навичками
-            if (model.SelectedSkills != null && model.SelectedSkills.Any())
-            {
-                users = users.Where(u => u.UserSkills.Any(us => model.SelectedSkills.Contains(us.SkillId))).ToList();
-            }
-
-            return PartialView("_UserList", users);
+            model.SearchText = model.SearchText?.Trim();
+            return PartialView("_UserList", await _homeService.SearchAsync(model));
         }
-
     }
 }

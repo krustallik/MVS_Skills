@@ -1,98 +1,143 @@
-﻿@model MVC.Models.UserInfo
+@using System.Globalization
+@model MVC.Models.UserInfo
+@using System.Security.Claims
 @{
     ViewData["Title"] = Model.Name;
+    var currentUserId = int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var parsedUserId)
+        ? parsedUserId
+        : (int?)null;
+    var canManage = User.IsInRole("Admin") || currentUserId == Model.OwnerId;
+    var yourRating = currentUserId.HasValue
+        ? Model.UserRatings.FirstOrDefault(rating => rating.RaterId == currentUserId.Value)
+        : null;
+    var initials = string.Concat(Model.Name
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2)
+        .Select(part => char.ToUpperInvariant(part[0])));
 }
-<div class="row">
-    <!-- Блок з аватаркою -->
-    <div class="col-md-3">
-        <h3>Аватар</h3>
-        @if (!string.IsNullOrEmpty(Model.AvatarPhoto))
+
+<a class="back-link" asp-controller="Home" asp-action="Index">← Back to directory</a>
+<section class="profile-detail">
+    <header class="detail-header">
+        @if (!string.IsNullOrWhiteSpace(Model.AvatarPhoto))
         {
-            <img src="@Model.AvatarPhoto" alt="Avatar" class="img-fluid img-thumbnail" />
+            <img class="detail-avatar" src="@Model.AvatarPhoto" alt="" />
         }
         else
         {
-            <p>Аватар не задано</p>
+            <div class="detail-avatar detail-avatar-initials" aria-hidden="true">@initials</div>
         }
-    </div>
+        <div class="detail-heading">
+            <p class="eyebrow">Professional profile</p>
+            <h1>@Model.Name</h1>
+            <p class="detail-role">@Model.Profession</p>
+            <p class="detail-meta">@Model.ExpirienseYears years of experience <span aria-hidden="true">·</span> @(Model.IsActive ? "Open to opportunities" : "Currently focused on current work")</p>
+        </div>
+        @if (canManage)
+        {
+            <a class="button button-search" asp-action="Edit" asp-route-id="@Model.Id">Edit profile</a>
+        }
+    </header>
 
-    <!-- Інформація про користувача -->
-    <div class="col-md-9">
-        <h1 class="display-4">Hello @Model.Name</h1>
-        <h3>Email: @Model.Email</h3>
-        <div>ID: @Model.Id</div>
-        <div>Profession: @Model.Profession</div>
-        <p>@Model.Description</p>
+    <div class="detail-columns">
+        <div class="detail-main">
+            <section class="detail-section">
+                <p class="eyebrow">About</p>
+                <h2>A little about the work</h2>
+                <p class="detail-description">@(string.IsNullOrWhiteSpace(Model.Description) ? "This profile is still taking shape." : Model.Description)</p>
+            </section>
 
-        <h4>Навички</h4>
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Логотип</th>
-                    <th>Назва</th>
-                    <th>Колір</th>
-                    <th>Рівень</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.UserSkills != null && Model.UserSkills.Any())
+            <section class="detail-section">
+                <p class="eyebrow">Skills</p>
+                <h2>What I work with</h2>
+                @if (Model.UserSkills.Any())
                 {
-                    foreach (var userSkill in Model.UserSkills)
-                    {
-                        var skill = userSkill.Skill;
-                        <tr>
-                            <td>
-                                @if (!string.IsNullOrEmpty(skill.LogoPath))
-                                {
-                                    <img src="@skill.LogoPath" alt="Логотип" width="80" height="80" class="img-thumbnail" />
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Немає логотипу</span>
-                                }
-                            </td>
-                            <td>@skill.Title</td>
-                            <td>
-                                <span style="background-color:@skill.Color; padding:5px 10px; color:white;">
-                                    @skill.Color
-                                </span>
-                            </td>
-                            <td>@userSkill.Level</td>
-                        </tr>
-                    }
+                    <div class="detail-skills">
+                        @foreach (var userSkill in Model.UserSkills.OrderByDescending(item => item.Level))
+                        {
+                            <div class="detail-skill">
+                                <span class="detail-skill-name">@userSkill.Skill.Title</span>
+                                <span class="detail-skill-level">Level @userSkill.Level</span>
+                            </div>
+                        }
+                    </div>
                 }
                 else
                 {
-                    <tr>
-                        <td colspan="4">Навички відсутні.</td>
-                    </tr>
+                    <p class="detail-description">No skills have been added yet.</p>
                 }
-            </tbody>
-        </table>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a class="back-link detail-manage-link" asp-controller="Skill" asp-action="Index" asp-route-userId="@Model.Id">Manage skills →</a>
+                }
+            </section>
 
-        <a asp-controller="Skill" asp-action="Index" asp-route-userId="@Model.Id" class="btn btn-info">Керувати навичками</a>
-        <a asp-controller="UserInfo" asp-action="Index" class="btn btn-outline-success">Return</a>
+            @if (Model.PhotoPaths.Any())
+            {
+                <section class="detail-section">
+                    <p class="eyebrow">Gallery</p>
+                    <h2>Selected work</h2>
+                    <div class="detail-gallery">
+                        @foreach (var photo in Model.PhotoPaths)
+                        {
+                            <div class="gallery-item">
+                                <img src="@photo" alt="Profile gallery image" loading="lazy" />
+                                @if (canManage)
+                                {
+                                    <form method="post" asp-action="SetAvatar">
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        <input type="hidden" name="photo" value="@photo" />
+                                        <button class="button button-quiet" type="submit">Set as profile photo</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+        </div>
+
+        <aside class="detail-aside">
+            <p class="eyebrow">Your rating</p>
+            <div class="rating-score">@(Model.AverageRating?.ToString("0.0", CultureInfo.InvariantCulture) ?? "—")<span>/5</span></div>
+            <p class="rating-caption">Community rating</p>
+            @if (currentUserId.HasValue && currentUserId.Value != Model.OwnerId)
+            {
+                @if (yourRating == null)
+                {
+                    <form asp-controller="UserInfo" asp-action="Rate" method="post" class="rating-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="userInfoId" value="@Model.Id" />
+                        <label for="rating">Your rating</label>
+                        <select id="rating" name="rating" class="form-select">
+                            <option value="5">5 — Excellent</option>
+                            <option value="4">4 — Strong</option>
+                            <option value="3">3 — Good</option>
+                            <option value="2">2 — Fair</option>
+                            <option value="1">1 — Needs work</option>
+                        </select>
+                        <button class="button button-search" type="submit">Submit rating</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="rating-caption">Your rating: @yourRating.Rating / 5</p>
+                }
+            }
+            else if (currentUserId == Model.OwnerId)
+            {
+                <p class="rating-caption">Your own profile is not eligible for a rating.</p>
+            }
+            <div class="aside-rule"></div>
+            <p class="aside-note">Contact information is visible to signed-in members of the directory.</p>
+            @if (!string.IsNullOrWhiteSpace(Model.Email))
+            {
+                <a class="contact-link" href="mailto:@Model.Email">Contact this professional ↗</a>
+            }
+            @if (canManage)
+            {
+                <a class="button button-quiet detail-secondary" asp-controller="UserInfo" asp-action="Index">My profiles</a>
+            }
+        </aside>
     </div>
-</div>
-<hr />
-<!-- Галерея фото користувача -->
-<h3>Фото користувача</h3>
-<div class="d-flex flex-wrap">
-    @if (Model.PhotoPaths != null && Model.PhotoPaths.Any())
-    {
-        foreach (var photo in Model.PhotoPaths)
-        {
-            <form method="post" asp-action="SetAvatar" class="d-inline">
-                <input type="hidden" name="id" value="@Model.Id" />
-                <input type="hidden" name="photo" value="@photo" />
-                <button type="submit" class="btn btn-link p-0 border-0" title="Set as avatar" aria-label="Set photo as avatar">
-                    <img src="@photo" alt="" class="img-thumbnail m-1" style="width:100px; height:100px;" />
-                </button>
-            </form>
-        }
-    }
-    else
-    {
-        <p>Фото не завантажено.</p>
-    }
-</div>
+</section>

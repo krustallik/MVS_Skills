@@ -1,57 +1,71 @@
-﻿@model List<MVC.Models.UserInfo>
+@using System.Globalization
+@model List<MVC.Models.UserInfo>
 @{
-    ViewData["Title"] = "List of user info";
+    var isAdmin = User.IsInRole("Admin");
+    ViewData["Title"] = isAdmin ? "Professional profiles" : "My profiles";
 }
-<div>
+
+<section class="editor-heading">
+    <a class="back-link" asp-controller="Home" asp-action="Index">← Back to directory</a>
+    <p class="eyebrow">Profile management</p>
     <h1>@ViewData["Title"]</h1>
-    <a asp-controller="UserInfo" asp-action="Create" class="btn btn-success">Create</a>
-    <table class="table table-striped table-hover">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Profession</th>
-                @if (User.IsInRole("Admin"))
-                {
-                    <th>Owner Email</th>
-                    <th>Owner FullName</th>
-                }
-                <th>Avarage Rating</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.Name</td>
-                    <td>@item.Email</td>
-                    <td>@item.Profession</td>
-                    @if (User.IsInRole("Admin")){
-                        <td>@item.Owner.Email</td>
-                        <td>@item.Owner.FullName</td>
-                    }
+    <p>Review the professional details shown in the directory and keep each profile up to date.</p>
+</section>
 
-                    <td>
-                        @if (item.AverageRating.HasValue)
-                        {
-                            @item.AverageRating
-                        }
-                    </td>
-
-                    <td>
-                        <a asp-controller="UserInfo" asp-action="View" asp-route-id="@item.Id" class="btn btn-primary">View</a>
-                        <a asp-controller="UserInfo" asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a>
-                        <form asp-controller="UserInfo" asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;">
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this user?');">
-                                Delete
-                            </button>
-                        </form>
-                    </td>
-                    
-                </tr>
-            }
-        </tbody>
-    </table>
+<div class="profile-list-toolbar">
+    <p><strong>@Model.Count @(Model.Count == 1 ? "profile" : "profiles")</strong></p>
+    <a asp-controller="UserInfo" asp-action="Create" class="button button-search">Create a profile</a>
 </div>
+
+@if (Model.Count == 0)
+{
+    <div class="empty-state">
+        <span class="empty-mark" aria-hidden="true">＋</span>
+        <div>
+            <p class="eyebrow">A place to start</p>
+            <h2>No profiles yet.</h2>
+            <p>Create a profile to share your experience and skills with the community.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="owned-profile-list">
+        @foreach (var item in Model)
+        {
+            var initials = string.Concat(item.Name
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Take(2)
+                .Select(part => char.ToUpperInvariant(part[0])));
+            <article class="owned-profile-row">
+                <div class="profile-row-avatar" aria-hidden="true">@initials</div>
+                <div class="owned-profile-copy">
+                    <h2>@item.Name</h2>
+                    <p>@(string.IsNullOrWhiteSpace(item.Profession) ? "Professional" : item.Profession) <span aria-hidden="true">·</span> @item.ExpirienseYears years of experience</p>
+                    @if (isAdmin && item.Owner != null)
+                    {
+                        <small>Managed by @item.Owner.FullName</small>
+                    }
+                </div>
+                <div class="owned-profile-rating">
+                    @if (item.AverageRating.HasValue)
+                    {
+                        <span class="profile-rating"><span aria-hidden="true">★</span> @item.AverageRating.Value.ToString("0.0", CultureInfo.InvariantCulture)</span>
+                    }
+                    else
+                    {
+                        <span class="profile-rating profile-rating-new">No ratings</span>
+                    }
+                </div>
+                <div class="owned-profile-actions">
+                    <a class="text-action" asp-controller="UserInfo" asp-action="View" asp-route-id="@item.Id">View</a>
+                    <a class="text-action" asp-controller="UserInfo" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
+                    <form asp-controller="UserInfo" asp-action="Delete" asp-route-id="@item.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button class="text-action text-action-danger" type="submit" onclick="return confirm('Remove this profile?');">Remove</button>
+                    </form>
+                </div>
+            </article>
+        }
+    </div>
+}

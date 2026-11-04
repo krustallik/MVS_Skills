@@ -1,47 +1,38 @@
-﻿@model MVC.Models.User
+@model MVC.Models.User
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Account settings";
 }
-<div>
-    <h1 class="display-4">@ViewData["Title"]</h1>
 
-    <div class="row">
-        <!-- Інформація про користувача -->
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">User Information</div>
-                <div class="card-body">
-                    @if (!string.IsNullOrEmpty(Model.ImagePath))
-                    {
-                        <div class="avatar" style="background-image: url('@Model.ImagePath'); width: 100px; height: 100px; background-size: cover; border-radius: 50%;"></div>
-                    }
-                    <div class="mt-3">
-                        <h5>@Model.FullName</h5>
-                    </div>
-                    <div>
-                        <small class="text-muted">Email:</small> @Model.Email
-                    </div>
-                    <div>
-                        <small class="text-muted">Phone:</small> @Model.PhoneNumber
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <a asp-area="Auth" asp-controller="Profile" asp-action="Edit" class="btn btn-outline-success">Edit Profile</a>
-                    <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-outline-primary">Return</a>
-                </div>
-            </div>
+<section class="editor-heading">
+    <a class="back-link" asp-area="" asp-controller="Home" asp-action="Index">← Back to directory</a>
+    <p class="eyebrow">Your account</p>
+    <h1>Account settings</h1>
+    <p>Manage the details connected to your MVS Skills account.</p>
+</section>
+
+<div class="account-settings-grid">
+    <section class="setting-panel" aria-labelledby="account-details-title">
+        <p class="eyebrow">Account details</p>
+        <h2 id="account-details-title">Your information</h2>
+        @if (!string.IsNullOrEmpty(Model.ImagePath))
+        {
+            <img class="account-profile-image" src="@Model.ImagePath" alt="" />
+        }
+        <dl class="account-details-list">
+            <div><dt>Name</dt><dd>@(string.IsNullOrWhiteSpace(Model.FullName) ? "Not added" : Model.FullName)</dd></div>
+            <div><dt>Email</dt><dd>@Model.Email</dd></div>
+            <div><dt>Phone</dt><dd>@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "Not added" : Model.PhoneNumber)</dd></div>
+        </dl>
+        <a asp-area="Auth" asp-controller="Profile" asp-action="Edit" class="button button-search">Edit account details</a>
+    </section>
+
+    <section class="setting-panel" aria-labelledby="account-security-title">
+        <p class="eyebrow">Access & security</p>
+        <h2 id="account-security-title">Account access</h2>
+        <p>Change your password if you need to refresh the credentials for this account.</p>
+        <div class="setting-actions">
+            <a asp-area="Auth" asp-controller="Profile" asp-action="ChangePassword" class="button button-primary">Change password</a>
+            <a asp-area="Auth" asp-controller="Profile" asp-action="DeleteAccount" class="text-action text-action-danger">Delete account</a>
         </div>
-        <!-- Додаткові налаштування -->
-        <div class="col-md-6">
-            <div class="card mb-3">
-                <div class="card-header">Account Settings</div>
-                <div class="card-body">
-                    <a asp-area="Auth" asp-controller="Profile" asp-action="ChangePassword" class="btn btn-warning mb-2">Change Password</a>
-                    <form asp-area="Auth" asp-controller="Profile" asp-action="DeleteAccount" method="get">
-                        <button type="submit" class="btn btn-danger">Delete Account</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 </div>

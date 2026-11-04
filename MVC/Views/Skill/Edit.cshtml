@@ -1,52 +1,79 @@
-﻿@model MVC.Models.UserSkill
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model MVC.Models.UserSkill
 @{
-    ViewData["Title"] = "Редагування навички";
+    ViewData["Title"] = "Edit skill";
     var userId = (int)ViewBag.UserId;
+    var skillOptions = ViewBag.SkillOptions as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
+    var colorOptions = ViewBag.ColorOptions as IEnumerable<SelectListItem> ?? Enumerable.Empty<SelectListItem>();
+    var selectedTitle = ViewBag.SelectedTitle as string ?? Model.Skill.Title;
+    var selectedColor = ViewBag.SelectedColor as string ?? Model.Skill.Color;
+    var submittedLevel = ViewBag.SubmittedLevel as string ?? Model.Level.ToString(System.Globalization.CultureInfo.InvariantCulture);
 }
 
-<h1>Редагування навички для користувача з id = @userId</h1>
+<section class="editor-heading">
+    <a class="back-link" asp-action="Index" asp-route-userId="@userId">← Back to skills</a>
+    <p class="eyebrow">Profile management</p>
+    <h1>Edit skill</h1>
+    <p>Update the skill name, its display tone, or the proficiency level.</p>
+</section>
 
-<!-- Форма для редагування навички -->
-<form asp-action="Edit" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="userId" value="@userId" />
-    <input type="hidden" name="id" value="@Model.SkillId" />
+<div class="editor-layout skill-editor-layout">
+    <form class="profile-editor skill-editor" asp-action="Edit" asp-controller="Skill" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="userId" value="@userId" />
+        <input type="hidden" name="id" value="@Model.SkillId" />
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <section class="editor-section">
+            <p class="eyebrow">Skill details</p>
+            <div class="editor-grid">
+                <div class="form-field editor-wide">
+                    <label for="title">Skill</label>
+                    <select id="title" name="title" class="form-select" required>
+                        @foreach (var option in skillOptions)
+                        {
+                            <option value="@option.Value" selected="@(string.Equals(option.Value, selectedTitle, StringComparison.Ordinal) ? "selected" : null)">@option.Text</option>
+                        }
+                    </select>
+                    @Html.ValidationMessage("title", null, new { @class = "field-error" })
+                </div>
+                <div class="form-field">
+                    <label for="level">Proficiency level</label>
+                    <input id="level" name="level" class="form-control" type="number" lang="en-US" min="1" max="100" value="@submittedLevel" required />
+                    <small>Use a value from 1 to 100.</small>
+                    @Html.ValidationMessage("level", null, new { @class = "field-error" })
+                </div>
+                <div class="form-field">
+                    <label for="color">Label color</label>
+                    <select id="color" name="color" class="form-select" required>
+                        <option value="">Choose a tone</option>
+                        @foreach (var option in colorOptions)
+                        {
+                            <option value="@option.Value" selected="@(string.Equals(option.Value, selectedColor, StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@option.Text</option>
+                        }
+                    </select>
+                    @Html.ValidationMessage("color", null, new { @class = "field-error" })
+                </div>
+                <div class="form-field editor-wide">
+                    <label for="file">Replace skill logo <span class="optional-label">Optional</span></label>
+                    <div class="file-picker">
+                        <input id="file" type="file" name="file" class="file-picker-input" data-status-target="skill-logo-status" aria-describedby="skill-logo-help skill-logo-status" accept="image/png,image/jpeg,image/gif" />
+                        <label class="file-picker-button" for="file">Choose a logo</label>
+                        <span id="skill-logo-status" class="file-picker-status">No file selected</span>
+                    </div>
+                    <small id="skill-logo-help">Leave empty to keep the current logo. PNG, JPG, or GIF, maximum 5 MB.</small>
+                </div>
+            </div>
+        </section>
+        <div class="editor-actions">
+            <a class="button button-quiet" asp-action="Index" asp-route-userId="@userId">Cancel</a>
+            <button type="submit" class="button button-search">Save changes</button>
+        </div>
+    </form>
 
-    <!-- вибір назви навички -->
-    <div class="form-group">
-        <label for="title">Колір</label>
-        <select name="title" class="form-control" asp-items="ViewBag.SkillOptions">
-            <option value="">Оберіть навичку</option>
-        </select>
-        <span class="text-danger"></span>
-    </div>
-
-    <!-- Вибір кольору для навички -->
-    <div class="form-group">
-        <label for="color">Колір</label>
-        <select name="color" class="form-control" asp-items="ViewBag.ColorOptions">
-            <option value="">Оберіть колір</option>
-        </select>
-    </div>
-
-    <!-- Поле для редагування рівня володіння навичкою -->
-    <div class="form-group">
-        <label for="level">Рівень володіння</label>
-        <input name="level" class="form-control" type="number" min="1" max="100" value="@Model.Level" required />
-    </div>
-
-    <!-- Поле для завантаження нового логотипу навички -->
-    <div class="form-group">
-        <label for="file">Змінити логотип</label>
-        <input type="file" name="file" class="form-control" accept="image/png, image/jpeg, image/jpg, image/gif" />
-    </div>
-
-    <!-- Кнопки для збереження або скасування -->
-    <button type="submit" class="btn btn-primary mt-2">Зберегти</button>
-    <a asp-action="Index" asp-route-userId="@userId" class="btn btn-secondary mt-2">Скасувати</a>
-</form>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+    <aside class="editor-aside">
+        <span class="aside-label">Skill details</span>
+        <h2>Keep this profile current.</h2>
+        <p>Choose a level that reflects the work you can confidently take on today.</p>
+        <div class="aside-rule"></div>
+        <p class="aside-note">Changes appear on the profile when you save.</p>
+    </aside>
+</div>

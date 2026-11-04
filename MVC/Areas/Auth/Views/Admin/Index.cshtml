@@ -1,8 +1,8 @@
-﻿@model List<MVC.Models.User>
+@model List<MVC.Models.User>
 
 @{
     ViewData["Title"] = "List of Users";
-    var userRoles = ViewBag.UserRoles as Dictionary<int, string>; // Отримуємо ролі
+    var userRoles = ViewBag.UserRoles as Dictionary<int, string>; // Load user roles.
 }
 
 <div>
@@ -24,7 +24,7 @@
                 <tr>
                     <td>@item.Email</td>
                     <td>@item.FullName</td>
-                    <td>@(userRoles.ContainsKey(item.Id) ? userRoles[item.Id] : "No Role")</td> <!-- Відображаємо роль -->
+                    <td>@(userRoles.ContainsKey(item.Id) ? userRoles[item.Id] : "No Role")</td> <!-- Show the user's role. -->
                     <td>
                         <img src="@item.ImagePath" alt="User Avatar" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;" />
                     </td>

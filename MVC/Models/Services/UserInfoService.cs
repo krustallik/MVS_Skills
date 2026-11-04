@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,6 +30,7 @@ namespace MVC.Models.Services
             return await _context.UserInfos
                                  .Include(u => u.UserSkills)
                                  .ThenInclude(us => us.Skill)
+                                 .Include(u => u.UserRatings)
                                  .FirstOrDefaultAsync(u => u.Id == id);
         }
 

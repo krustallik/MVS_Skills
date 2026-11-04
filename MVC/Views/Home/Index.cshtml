@@ -1,61 +1,169 @@
-﻿@{
-    ViewData["Title"] = "Пошук користувачів";
+@model IReadOnlyList<MVC.Models.SearchProfileViewModel>
+@{
+    ViewData["Title"] = "Explore people";
+    var professions = (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Professions;
+    var skills = (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Skills;
 }
 
-<h1>Пошук користувачів</h1>
+<section class="hero-panel" aria-labelledby="page-title">
+    <div class="hero-copy">
+        <p class="eyebrow">MVS Skills</p>
+        <h1 id="page-title">Find the right person for the work.</h1>
+        <p class="hero-lede">Explore working professionals by name, specialty, and skill.</p>
+    </div>
+    <div class="hero-index" aria-label="Ways to explore the directory">
+        <p class="hero-index-heading">Ways to explore</p>
+        <div class="hero-index-row"><strong>People</strong><small>Start with a name</small></div>
+        <div class="hero-index-row"><strong>Specialties</strong><small>Find a role</small></div>
+        <div class="hero-index-row"><strong>Skills</strong><small>Match the work</small></div>
+    </div>
+</section>
 
-<div id="searchForm">
-    @Html.AntiForgeryToken()
-    <input type="text" id="searchText" class="form-control" placeholder="Пошук за ім'ям..." />
+<section class="directory-section" aria-labelledby="directory-title">
+    <div class="section-heading">
+        <div>
 
-    <label>Професія:</label>
-    <select id="professionSelect" class="form-control" multiple>
-        @foreach (var profession in ViewBag.Professions)
-        {
-            <option value="@profession.Value">@profession.Text</option>
-        }
-    </select>
+            <h2 id="directory-title">Professionals to know</h2>
+        </div>
+        <a class="text-action" asp-controller="UserInfo" asp-action="Create">Add a profile <span aria-hidden="true">↗</span></a>
+    </div>
 
-    <label>Навички:</label>
-    <select id="skillSelect" class="form-control" multiple>
-        @foreach (var skill in ViewBag.Skills)
-        {
-            <option value="@skill.Value">@skill.Text</option>
-        }
-    </select>
+    <form id="searchForm" class="search-panel" autocomplete="off">
+        @Html.AntiForgeryToken()
+        <label class="search-field">
+            <span class="field-label">Name</span>
+            <span class="search-input-wrap">
+                <span class="search-icon" aria-hidden="true">⌕</span>
+                <input type="search" id="searchText" name="searchText" maxlength="100" placeholder="Search by name" />
+            </span>
+        </label>
 
-    <button id="searchButton" class="btn btn-primary mt-2">Пошук</button>
-</div>
+        <details class="filter-menu">
+            <summary>Specialty <span id="professionCount" class="filter-count">All</span></summary>
+            <div class="filter-options">
+                @foreach (var profession in professions)
+                {
+                    <label class="filter-option">
+                        <input type="checkbox" name="profession" value="@profession.Value" />
+                        <span>@profession.Text</span>
+                    </label>
+                }
+                @if (!professions.Any())
+                {
+                    <p class="filter-empty">Specialties will appear as profiles are added.</p>
+                }
+            </div>
+        </details>
 
-<div id="userList">
-    @await Html.PartialAsync("_UserList", new List<MVC.Models.UserInfo>())
-</div>
+        <details class="filter-menu">
+            <summary>Skill <span id="skillCount" class="filter-count">All</span></summary>
+            <div class="filter-options filter-options-skills">
+                @foreach (var skill in skills)
+                {
+                    <label class="filter-option">
+                        <input type="checkbox" name="skill" value="@skill.Value" />
+                        <span>@skill.Text</span>
+                    </label>
+                }
+                @if (!skills.Any())
+                {
+                    <p class="filter-empty">Skills will appear as profiles are added.</p>
+                }
+            </div>
+        </details>
+
+        <button class="button button-search" type="submit">Search <span aria-hidden="true">→</span></button>
+        <button class="button button-reset" type="reset">Clear</button>
+    </form>
+
+    <div id="searchStatus" class="search-status" role="status" aria-live="polite"></div>
+    <div id="userList" class="profile-grid">
+        @await Html.PartialAsync("_UserList", Model)
+    </div>
+    <p class="result-limit">Showing up to 24 profiles. Add a filter to narrow the results.</p>
+</section>
 
 @section Scripts {
     <script>
-        document.getElementById("searchButton").addEventListener("click", function (event) {
-            event.preventDefault(); // Запобігає оновленню сторінки
+        (() => {
+            const form = document.getElementById("searchForm");
+            const results = document.getElementById("userList");
+            const status = document.getElementById("searchStatus");
+            const searchText = document.getElementById("searchText");
+            const professionCount = document.getElementById("professionCount");
+            const skillCount = document.getElementById("skillCount");
+            const token = form.querySelector('input[name="__RequestVerificationToken"]').value;
+            let debounceTimer;
+            let activeRequest;
 
-            let searchText = document.getElementById("searchText").value;
-            let selectedProfessions = [...document.getElementById("professionSelect").selectedOptions].map(option => option.value);
-            let selectedSkills = [...document.getElementById("skillSelect").selectedOptions].map(option => option.value);
+            const updateFilterCounts = () => {
+                const professionTotal = form.querySelectorAll('input[name="profession"]:checked').length;
+                const skillTotal = form.querySelectorAll('input[name="skill"]:checked').length;
+                professionCount.textContent = professionTotal ? String(professionTotal) : "All";
+                skillCount.textContent = skillTotal ? String(skillTotal) : "All";
+            };
 
-                    fetch('/Home/Search', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-            },
-            body: JSON.stringify({
-                searchText: searchText,
-                selectedProfessions: selectedProfessions,
-                selectedSkills: selectedSkills
-            })
-        })
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById("userList").innerHTML = data;
+            const search = async () => {
+                activeRequest?.abort();
+                activeRequest = new AbortController();
+                status.textContent = "Updating profiles…";
+                results.setAttribute("aria-busy", "true");
+
+                const payload = {
+                    searchText: searchText.value,
+                    selectedProfessions: [...form.querySelectorAll('input[name="profession"]:checked')].map(item => item.value),
+                    selectedSkills: [...form.querySelectorAll('input[name="skill"]:checked')].map(item => Number(item.value))
+                };
+
+                try {
+                    const response = await fetch('@Url.Action("Search", "Home")', {
+                        method: "POST",
+                        signal: activeRequest.signal,
+                        headers: {
+                            "Content-Type": "application/json",
+                            "RequestVerificationToken": token
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Search could not be completed.");
+                    }
+
+                    results.innerHTML = await response.text();
+                    status.textContent = "";
+                } catch (error) {
+                    if (error.name !== "AbortError") {
+                        status.textContent = "Search could not be completed. Please try again.";
+                    }
+                } finally {
+                    results.removeAttribute("aria-busy");
+                }
+            };
+
+            const scheduleSearch = () => {
+                window.clearTimeout(debounceTimer);
+                debounceTimer = window.setTimeout(search, 220);
+            };
+
+            form.addEventListener("submit", event => {
+                event.preventDefault();
+                window.clearTimeout(debounceTimer);
+                search();
             });
-        });
+            form.addEventListener("change", event => {
+                if (event.target.matches('input[name="profession"], input[name="skill"]')) {
+                    updateFilterCounts();
+                    scheduleSearch();
+                }
+            });
+            searchText.addEventListener("input", scheduleSearch);
+            form.addEventListener("reset", () => {
+                window.setTimeout(() => {
+                    updateFilterCounts();
+                    search();
+                }, 0);
+            });
+        })();
     </script>
 }

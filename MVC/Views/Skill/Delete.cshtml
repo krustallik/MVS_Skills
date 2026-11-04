@@ -1,20 +1,26 @@
-﻿@model MVC.Models.UserSkill
+@model MVC.Models.UserSkill
 @{
-    ViewData["Title"] = "Видалення навички";
+    ViewData["Title"] = "Remove skill";
     var userId = (int)ViewBag.UserId;
 }
 
-<h1>Видалення навички для користувача з ID = @userId</h1>
+<section class="editor-heading">
+    <a class="back-link" asp-action="Index" asp-route-userId="@userId">← Back to skills</a>
+    <p class="eyebrow">Profile management</p>
+    <h1>Remove this skill?</h1>
+    <p>This removes the skill from the profile. The skill itself remains available in the directory.</p>
+</section>
 
-<!-- Повідомлення з підтвердженням видалення -->
-<p>Ви впевнені, що хочете видалити навичку "<strong>@Model.Skill.Title</strong>"?</p>
-
-<!-- Форма для підтвердження видалення -->
-<form asp-action="DeleteConfirmed" method="post">
-    <input type="hidden" name="skillId" value="@Model.SkillId" />
-    <input type="hidden" name="userId" value="@userId" />
-
-    <!-- Кнопки для підтвердження або скасування -->
-    <button type="submit" class="btn btn-danger">Видалити</button>
-    <a asp-action="Index" asp-route-userId="@userId" class="btn btn-secondary">Відміна</a>
-</form>
+<section class="confirm-panel">
+    <div class="managed-skill-mark" aria-hidden="true">@Model.Skill.Title[..1].ToUpperInvariant()</div>
+    <div>
+        <h2>@Model.Skill.Title</h2>
+        <p>Level @Model.Level</p>
+    </div>
+    <form asp-action="Delete" method="post" class="confirm-actions">
+        <input type="hidden" name="skillId" value="@Model.SkillId" />
+        <input type="hidden" name="userId" value="@userId" />
+        <a class="button button-quiet" asp-action="Index" asp-route-userId="@userId">Keep skill</a>
+        <button type="submit" class="button button-danger">Remove skill</button>
+    </form>
+</section>

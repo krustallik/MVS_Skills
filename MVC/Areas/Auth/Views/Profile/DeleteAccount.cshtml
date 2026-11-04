@@ -1,13 +1,22 @@
-﻿@{
-    ViewData["Title"] = "Delete Account";
+@{
+    ViewData["Title"] = "Delete account";
 }
-<div>
-    <h1 class="display-4">@ViewData["Title"]</h1>
-    <div class="alert alert-warning">
-        Ви впевнені, що хочете видалити свій акаунт? Ця дія незворотня.
+
+<section class="editor-heading">
+    <a class="back-link" asp-area="Auth" asp-controller="Profile" asp-action="Index">← Back to account settings</a>
+    <p class="eyebrow">Account access</p>
+    <h1>Delete account</h1>
+    <p>Review this change before you continue.</p>
+</section>
+
+<section class="account-delete-panel">
+    <div>
+        <p class="eyebrow">Permanent action</p>
+        <h2>Deleting your account cannot be undone.</h2>
+        <p>Your sign-in account will be removed. Contact the site administrator if you need help before continuing.</p>
     </div>
-    <form method="post" asp-area="Auth" asp-controller="Profile" asp-action="DeleteAccount">
-        <button type="submit" class="btn btn-danger">Видалити акаунт</button>
-        <a asp-area="Auth" asp-controller="Profile" asp-action="Index" class="btn btn-secondary">Скасувати</a>
+    <form method="post" asp-area="Auth" asp-controller="Profile" asp-action="DeleteAccount" class="confirm-actions">
+        <button type="submit" class="button button-danger">Delete account</button>
+        <a asp-area="Auth" asp-controller="Profile" asp-action="Index" class="button button-quiet">Keep account</a>
     </form>
-</div>
+</section>

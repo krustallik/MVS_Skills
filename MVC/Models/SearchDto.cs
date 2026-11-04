@@ -1,4 +1,4 @@
-﻿namespace MVC.Models
+namespace MVC.Models
 {
     public class SearchDto
     {
