@@ -225,10 +225,9 @@ namespace MVC.Controllers
                 return "Each photo must be 5 MB or smaller.";
             }
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            if (files.Any(photo => !allowedExtensions.Contains(Path.GetExtension(photo.FileName).ToLowerInvariant())))
+            if (files.Any(photo => !ImageUploadValidator.HasSupportedImageContent(photo)))
             {
-                return "Only JPG, PNG, and GIF photos are allowed.";
+                return "Photos must contain JPG, PNG, or GIF image data and use the matching file extension.";
             }
 
             return null;

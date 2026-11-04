@@ -160,12 +160,11 @@ namespace MVC.Models.Services
                 throw new InvalidOperationException("Skill logo files must be 5 MB or smaller.");
             }
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
             var fileExtension = Path.GetExtension(file.FileName).ToLower();
 
-            if (!allowedExtensions.Contains(fileExtension))
+            if (!ImageUploadValidator.HasSupportedImageContent(file))
             {
-                throw new InvalidOperationException("Файл повинен бути зображенням (.jpg, .jpeg, .png, .gif)");
+                throw new InvalidOperationException("Skill logos must contain JPG, PNG, or GIF image data and use the matching file extension.");
             }
 
             string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "skills");
