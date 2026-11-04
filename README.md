@@ -1,12 +1,12 @@
 # MVS Skills
 
-An ASP.NET Core MVC skill-sharing prototype. Users can create professional profiles, search profiles by name, profession, and skill, manage their own profile, upload profile images, and rate other profiles.
+MVS Skills is an academic ASP.NET Core MVC skill-sharing prototype. Users can create professional profiles, search by name, profession, and skill, manage their own profiles, upload profile images, and rate other profiles.
 
-> **Local branch only:** this work is not published. The existing public Git history contains database, profile, and image artifacts whose provenance has not been established. Review and remediate that history before publishing any branch or promoting the repository.
+> **Data provenance:** The existing repository history contains a tracked SQLite database and profile or image artifacts whose provenance has not been established. This change adds source code and a synthetic-only screenshot; it does not add records from that database. Do not reuse historical data as demo data until its provenance is reviewed.
 
 ## Demonstration
 
-The screenshot below was captured from the running application using an isolated SQLite database and a synthetic profile. It contains no data from the checked-in database.
+The screenshot was captured from the running application with an isolated SQLite database and a synthetic profile.
 
 ![Profile search showing a synthetic demo profile](docs/screenshots/demo-search.png)
 
@@ -27,40 +27,24 @@ The screenshot below was captured from the running application using an isolated
 - ASP.NET Core Identity
 - Razor views and Bootstrap
 
-## Architecture
+## Project documentation
 
-```mermaid
-flowchart LR
-    Browser[Browser] --> MVC[ASP.NET Core MVC]
-    MVC --> Home[Home and profile search]
-    MVC --> Profiles[Owner-scoped profile workflows]
-    MVC --> Auth[Identity account area]
-    MVC --> Skills[Admin skill management]
-    Home --> Services[Application services]
-    Profiles --> Services
-    Skills --> Services
-    Services --> EF[Entity Framework Core]
-    Auth --> EF
-    EF --> DB[(SQLite)]
-    Profiles --> Uploads[Local profile-image files]
-```
+- [Development setup](docs/DEVELOPMENT.md): isolated database setup, migrations, and troubleshooting.
+- [Project overview](docs/PROJECT_OVERVIEW.md): main user journeys, application areas, and data flow.
 
-## Requirements
+## Run locally with an isolated database
 
-- .NET 8 SDK
-- The `dotnet-ef` tool at version 9.0.2 for applying the checked-in EF migrations
+Requirements: .NET 8 SDK and the dotnet-ef tool at version 9.0.2.
 
 Install the EF command-line tool if needed:
 
-```powershell
+~~~powershell
 dotnet tool install --global dotnet-ef --version 9.0.2
-```
+~~~
 
-## Run with an isolated local database
+Run from the repository root. The database is stored in the temporary directory outside the repository.
 
-Run these commands from the repository root. The database is placed in the user's temporary directory, outside the repository.
-
-```powershell
+~~~powershell
 dotnet restore MVC/MVC.csproj
 dotnet build MVC/MVC.csproj --no-restore
 
@@ -70,19 +54,19 @@ $env:ConnectionStrings__DefaultConnection = "Data Source=$demoDb"
 Set-Location MVC
 dotnet ef database update --no-build --project MVC.csproj --startup-project MVC.csproj
 dotnet run --no-build --no-launch-profile --project MVC.csproj --urls http://127.0.0.1:5179
-```
+~~~
 
-Open `http://127.0.0.1:5179/`. Register a local account, then use the **User Info** area to create a profile. All sample profiles should be synthetic. Stop the app with `Ctrl+C` and clear the temporary database when finished.
+Open http://127.0.0.1:5179/ and register a local account. Use the User Info area to create a synthetic profile. Stop the app with Ctrl+C and remove the temporary database when finished.
 
 ## Verification
 
-`dotnet build MVC/MVC.csproj --no-restore` passed after the local changes. Manual HTTP scenarios against the isolated database verified registration and login, lockout after repeated failed sign-ins, antiforgery enforcement, profile creation and owner edits, cross-owner edit/delete rejection, rating bounds, and rejection of a text file renamed with an image extension. Anonymous profile search was reproduced as HTTP 500, fixed, and then verified as HTTP 200 with the synthetic profile.
+The MVC project built successfully after the source changes. Manual HTTP scenarios against the isolated database verified registration and login, lockout after repeated failed sign-ins, antiforgery enforcement, profile creation and owner edits, rejection of cross-owner edits and deletes, rating bounds, and rejection of a text file renamed with an image extension. Anonymous profile search was reproduced as HTTP 500, fixed, and verified as HTTP 200 with the synthetic profile.
 
-There is no committed automated test project. The runtime checks do not constitute a full security audit or image decoder test.
+There is no committed automated test project. These runtime checks are not a full security audit or image-decoder test.
 
-## Limitations and security status
+## Limitations
 
-- The application is an academic prototype; no production deployment or external hosting has been verified.
-- The application uses local SQLite persistence and local image files. A deployment needs explicit database, upload storage, backup, and access-control operations.
-- Image uploads are checked against allowed extensions and file signatures, but the app does not fully decode images or enforce a persistent per-user storage quota.
-- Existing public Git history requires a data-provenance review. This branch remains local and must not be pushed until that issue is resolved and the history is safely remediated.
+- This is an academic prototype; production deployment and external hosting have not been verified.
+- The application uses local SQLite persistence and local image files. A deployment needs an explicit plan for database and upload storage, backups, access control, and operations.
+- Uploads are checked against allowed extensions and file signatures, but images are not fully decoded and persistent per-user storage quotas are not enforced.
+- The existing public Git history still needs a data-provenance review. This source update does not remove or rewrite historical records.
